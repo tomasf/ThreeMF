@@ -49,9 +49,7 @@ public extension PackageReader {
         let modelURI = "http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"
 
         guard let relationships = relsDocument.rootElement(),
-              let modelRelationship = relationships.elements(forName: "Relationship").first(where: {
-                  (try? $0["Type"]) == modelURI
-              }),
+              let modelRelationship = relationships.element(named: "Relationship", where: "Type", is: modelURI),
               let target: String = try? modelRelationship["Target"],
               let url = URL(string: target)
         else {

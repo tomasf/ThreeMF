@@ -4,6 +4,12 @@ import FoundationXML
 #endif
 
 internal extension XMLElement {
+    // The built-in method for finding attributes does not seem to work
+    // properly in swift-corelibs-foundation's FoundationXML
+    func attributeValue(forName name: String) -> String? {
+        attributes?.first(where: { $0.name == name })?.stringValue
+    }
+
     var elements: [XMLElement] {
         (children ?? []).compactMap { $0 as? XMLElement }
     }
@@ -25,17 +31,8 @@ internal extension XMLElement {
 }
 
 internal extension XMLElement {
-    func elements<T>(named name: String, map: (XMLElement) throws(Error) -> T) throws(Error) -> [T] {
-        try elements(forName: name).map { e throws(Error) in
-            try map(e)
-        }
-    }
-}
-
-internal extension XMLElement {
     func string(forAttribute attributeName: String) throws(Error) -> String {
-        guard let attribute = attribute(forName: attributeName),
-              let string = attribute.stringValue else {
+        guard let string = attributeValue(forName: attributeName) else {
             throw Error.missingAttribute(name: attributeName, parentXPath: xPath ?? "")
         }
         return string
@@ -107,6 +104,14 @@ internal extension XMLElement {
             return try T(string: s)
         }
     }
+}
+
+internal extension XMLElement {
+    func elements<T>(named name: String, map: (XMLElement) throws(Error) -> T) throws(Error) -> [T] {
+        try elements(forName: name).map { e throws(Error) in
+            try map(e)
+        }
+    }
 
     subscript<T: XMLConvertible>(elements name: String) -> [T] {
         get throws(Error) {
@@ -123,5 +128,11 @@ internal extension XMLElement {
             }
             return childElement
         }
+    }
+
+    func element(named name: String, where attributeName: String, is value: String) -> XMLElement? {
+        elements(forName: name).first(where: {
+            $0.attributeValue(forName: attributeName) == value
+        })
     }
 }
