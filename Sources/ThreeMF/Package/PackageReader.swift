@@ -39,18 +39,25 @@ public extension PackageReader {
             throw .failedToReadArchiveFile(name: relationshipsFile, error: error)
         }
 
-        let target: String?
+        let relsDocument: XMLDocument
         do {
-            let relsDocument = try XMLDocument(data: relsData)
-            target = try relsDocument.nodes(forXPath: "/Relationships/Relationship[@Type=\"http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel\"]/@Target").first?.stringValue
+            relsDocument = try XMLDocument(data: relsData)
         } catch {
             throw .malformedRelationships(error)
         }
 
-        guard let target, let url = URL(string: target) else {
-            print("Failed to interpret target \(String(describing: target))")
+        let modelURI = "http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"
+
+        guard let relationships = relsDocument.rootElement(),
+              let modelRelationship = relationships.elements(forName: "Relationship").first(where: {
+                  (try? $0["Type"]) == modelURI
+              }),
+              let target: String = try? modelRelationship["Target"],
+              let url = URL(string: target)
+        else {
             throw Error.malformedRelationships(nil)
         }
+
         return url
     }
 
