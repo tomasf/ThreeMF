@@ -39,21 +39,19 @@ public extension PackageReader {
             throw .failedToReadArchiveFile(name: relationshipsFile, error: error)
         }
 
-        let relsDocument: XMLDocument
+        let target: String?
         do {
-            relsDocument = try XMLDocument(data: relsData)
-
-            guard let target = try relsDocument.nodes(forXPath: "/Relationships/Relationship[@Type=\"http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel\"]/@Target").first?.stringValue else {
-                throw Error.malformedRelationships(nil)
-            }
-
-            guard let url = URL(string: target) else {
-                throw Error.malformedRelationships(nil)
-            }
-            return url
+            let relsDocument = try XMLDocument(data: relsData)
+            target = try relsDocument.nodes(forXPath: "/Relationships/Relationship[@Type=\"http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel\"]/@Target").first?.stringValue
         } catch {
             throw .malformedRelationships(error)
         }
+
+        guard let target, let url = URL(string: target) else {
+            print("Failed to interpret target \(String(describing: target))")
+            throw Error.malformedRelationships(nil)
+        }
+        return url
     }
 
     func model() throws(Error) -> Model {
