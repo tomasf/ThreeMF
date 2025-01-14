@@ -4,7 +4,7 @@ import FoundationXML
 #endif
 
 public extension Mesh {
-    struct Vertex: Hashable {
+    public struct Vertex: Hashable {
         public let x: Double
         public let y: Double
         public let z: Double
@@ -17,28 +17,16 @@ public extension Mesh {
     }
 }
 
-extension Mesh.Vertex: XMLConvertible {
-    var xmlElement: XMLElement {
-        XMLElement("vertex", [
-            "x": String(x),
-            "y": String(y),
-            "z": String(z)
-        ])
+extension Mesh.Vertex: XMLElementComposable {
+    static let elementIdentifier = Core.vertex
+
+    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
+        [Core.x: x, Core.y: y, Core.z: z]
     }
 
     init(xmlElement: XMLElement) throws(Error) {
-        x = try xmlElement["x"]
-        y = try xmlElement["y"]
-        z = try xmlElement["z"]
-    }
-}
-
-internal extension [Mesh.Vertex] {
-    var xmlElement: XMLElement {
-        XMLElement("vertices", children: map(\.xmlElement))
-    }
-
-    init(xmlElement: XMLElement) throws(Error) {
-        self = try xmlElement[elements: "vertex"]
+        x = try xmlElement[Core.x]
+        y = try xmlElement[Core.y]
+        z = try xmlElement[Core.z]
     }
 }

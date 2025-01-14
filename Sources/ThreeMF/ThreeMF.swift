@@ -12,85 +12,28 @@ public enum Error: Swift.Error {
     case failedToReadArchiveFile (name: String, error: Swift.Error?)
     case malformedRelationships ((any Swift.Error)?)
 
-    case missingElement (name: String, parentXPath: String)
-    case missingAttribute (name: String, parentXPath: String)
+    case missingElement (name: String)
+    case missingAttribute (name: String)
 
-    case malformedAttribute (name: String, parentXPath: String)
+    case malformedAttribute (name: String)
     case malformedTransform (String)
     case malformedColorString (String)
-    case malformedNumbers (String)
-    case malformedIndices (String)
-    case malformedBlendMethod (String)
-    case malformedURI (String)
     case malformedInteger (String)
 
     case malformedAttributeValue (String)
 }
 
-internal protocol XMLConvertible {
-    var xmlElement: XMLElement { get }
-    init(xmlElement: XMLElement) throws(Error)
+enum MimeType: String {
+    case model = "application/vnd.ms-package.3dmanufacturing-3dmodel+xml"
+    case relationships = "application/vnd.openxmlformats-package.relationships+xml"
+    case modelTexture = "application/vnd.ms-package.3dmanufacturing-3dmodeltexture"
 }
 
-internal protocol XMLConvertibleNamed: XMLConvertible {
-    static var elementName: String { get }
+enum RelationshipType: String {
+    case model = "http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"
+    case thumbnail = "http://schemas.openxmlformats.org/package/2006/relationships/metadata/thumbnail"
+    case printTicket = "http://schemas.microsoft.com/3dmanufacturing/2013/01/printticket"
+    case mustPreserve = "http://schemas.openxmlformats.org/package/2006/relationships/mustpreserve"
+    case texture = "http://schemas.microsoft.com/3dmanufacturing/2013/01/3dtexture"
+
 }
-
-internal protocol StringConvertible {
-    var string: String { get }
-    init (string: String) throws(Error)
-}
-
-internal protocol StringConvertibleOptional {
-    var string: String? { get }
-    init (string: String?) throws(Error)
-}
-
-extension RawRepresentable<String> {
-    var string: String { rawValue }
-
-    init(string: String) throws(Error) {
-        guard let element = Self(rawValue: string) else {
-            throw .malformedAttributeValue(string)
-        }
-        self = element
-    }
-}
-
-extension Sequence where Element: StringConvertible {
-    var string: String {
-        map { $0.string }.joined(separator: " ")
-    }
-}
-
-extension Int: StringConvertible {
-    var string: String {
-        String(self)
-    }
-
-    init(string: String) throws(Error) {
-        guard let int = Int(string) else {
-            throw .malformedInteger(string)
-        }
-        self = int
-    }
-}
-
-extension Double: StringConvertible {
-    var string: String {
-        String(self)
-    }
-
-    init(string: String) throws(Error) {
-        guard let int = Double(string) else {
-            throw .malformedInteger(string)
-        }
-        self = int
-    }
-}
-
-extension String: StringConvertible {
-    var string: String { self }
-    init(string: String) throws(Error) { self = string }
-}
-

@@ -4,7 +4,7 @@ import FoundationXML
 #endif
 
 // m:texture2dgroup
-public struct Texture2DGroup: Resource, XMLConvertibleNamed {
+public struct Texture2DGroup: Resource {
     static let elementName = "m:texture2dgroup"
 
     public var id: ResourceID
@@ -20,20 +20,24 @@ public struct Texture2DGroup: Resource, XMLConvertibleNamed {
     }
 }
 
-internal extension Texture2DGroup {
-    var xmlElement: XMLElement {
-        XMLElement("m:texture2dgroup", [
-            "id": String(id),
-            "texid": String(texture2DID),
-            "displaypropertiesid": displayPropertiesID.map { String($0) }
-        ], children: coordinates.map(\.xmlElement))
+extension Texture2DGroup: XMLElementComposable {
+    static let elementIdentifier = Materials.texture2DGroup
+
+    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
+        [
+            .m.id: id,
+            .m.texID: texture2DID,
+            .m.displayPropertiesID: displayPropertiesID
+        ]
     }
 
+    var children: [(any XMLConvertible)?] { coordinates }
+
     init(xmlElement: XMLElement) throws(Error) {
-        id = try xmlElement["id"]
-        texture2DID = try xmlElement["texid"]
-        displayPropertiesID = try? xmlElement["displaypropertiesid"]
-        coordinates = try xmlElement[elements: "m:tex2coord"]
+        id = try xmlElement[.m.id]
+        texture2DID = try xmlElement[.m.texID]
+        displayPropertiesID = try? xmlElement[.m.displayPropertiesID]
+        coordinates = try xmlElement[.m.tex2Coord]
     }
 }
 
@@ -50,17 +54,19 @@ public extension Texture2DGroup {
     }
 }
 
-extension Texture2DGroup.Coordinate: XMLConvertible {
-    var xmlElement: XMLElement {
-        XMLElement("m:tex2coord", [
-            "u": String(u),
-            "v": String(v),
-        ])
+extension Texture2DGroup.Coordinate: XMLElementComposable {
+    static let elementIdentifier = Materials.tex2Coord
+
+    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
+        [
+            .m.u: u,
+            .m.v: v
+        ]
     }
 
     init(xmlElement: XMLElement) throws(Error) {
-        u = try xmlElement["u"]
-        v = try xmlElement["v"]
+        u = try xmlElement[.m.u]
+        v = try xmlElement[.m.v]
     }
 }
 

@@ -6,6 +6,7 @@ import FoundationXML
 
 public struct Model {
     public var unit: Unit?
+    public var xmlLanguageCode: String?
     public var languageCode: String?
     public var requiredExtensionPrefixes: Set<Extension.Prefix>?
     public var recommendedExtensionPrefixes: Set<Extension.Prefix>?
@@ -13,8 +14,9 @@ public struct Model {
     public var resources: [any Resource]
     public var buildItems: [Item]
 
-    init(
+    public init(
         unit: Unit? = nil,
+        xmlLanguageCode: String? = nil,
         languageCode: String? = nil,
         requiredExtensionPrefixes: Set<Extension.Prefix>? = nil,
         recommendedExtensionPrefixes: Set<Extension.Prefix>? = nil,
@@ -23,6 +25,7 @@ public struct Model {
         buildItems: [Item] = []
     ) {
         self.unit = unit
+        self.xmlLanguageCode = xmlLanguageCode
         self.languageCode = languageCode
         self.requiredExtensionPrefixes = requiredExtensionPrefixes
         self.recommendedExtensionPrefixes = recommendedExtensionPrefixes
@@ -50,43 +53,47 @@ public extension Model {
     }
 }
 
-internal extension Model {
-    var resourcesElement: XMLElement {
+extension Model: XMLElementComposable {
+    static let elementIdentifier = Core.model
+    
+    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
+        [
+            Core.unit: unit,
+            XML.lang: xmlLanguageCode,
+            Core.language: languageCode,
+            Core.requiredExtensions: requiredExtensionPrefixes?.string,
+            Core.recommendedExtensions: recommendedExtensionPrefixes?.string
+        ]
+    }
+
+    var children: [(any XMLConvertible)?] {
         guard let xmlConvertibles = resources as? [any XMLConvertible] else {
             fatalError("Resources must conform to XMLCConvertible")
         }
-        return XMLElement("resources", children: xmlConvertibles.map(\.xmlElement))
-    }
-
-    var xmlElement: XMLElement {
-        XMLElement("model", [
-            "unit": unit?.rawValue,
-            "language": languageCode,
-            "requiredextensions": requiredExtensionPrefixes?.string,
-            "recommendedextensions": recommendedExtensionPrefixes?.string,
-        ], children: metadata.map(\.xmlElement) + [
-            resourcesElement,
-            XMLElement("build", children: buildItems.map(\.xmlElement))
-        ])
+        return [
+            XMLElement(Core.resources, children: xmlConvertibles).literal,
+            buildItems.wrapped(in: Core.build),
+        ]
     }
 
     init(xmlElement element: XMLElement) throws(Error) {
-        unit = try? element["unit"]
-        languageCode = try? element["language"]
-        requiredExtensionPrefixes = (try? element["requiredextensions"]).map { Set($0) }
-        recommendedExtensionPrefixes = (try? element["recommendedextensions"]).map { Set($0) }
+        unit = try? element[Core.unit]
+        xmlLanguageCode = try? element[XML.lang]
+        languageCode = try? element[Core.language]
+        requiredExtensionPrefixes = try? element[Core.requiredExtensions]
+        recommendedExtensionPrefixes = try? element[Core.recommendedExtensions]
 
-        metadata = try element[elements: "metadata"]
+        metadata = try element[Core.metadata]
 
-        let resourcesElement = try element[element: "resources"]
+        let resourcesElement: XMLElement = try element[Core.resources]
 
-        self.resources = try resourcesElement.elements.map { element throws(Error) in
-            guard let resourceType = resourceTypePerElementName[element.name ?? ""] else {
+        self.resources = try resourcesElement.elements.map { e throws(Error) in
+            guard let resourceType = resourceTypePerElementIdentifier[e.identifier] else {
                 return nil // Unknown resource element type
             }
-            return try resourceType.init(xmlElement: element)
+            return try resourceType.init(xmlElement: e)
         }.compactMap { $0 }
 
-        buildItems = try element[element: "build"][elements: "item"]
+        buildItems = try element[Core.build][Core.item]
     }
 }

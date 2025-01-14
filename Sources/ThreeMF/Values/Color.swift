@@ -4,27 +4,29 @@ import FoundationXML
 #endif
 
 // CT_Color and m:color
-public struct Color {
+public struct Color: Hashable {
     public typealias Component = UInt8
-    let red: Component
-    let green: Component
-    let blue: Component
-    let alpha: Component
+    public let red: Component
+    public let green: Component
+    public let blue: Component
+    public let alpha: Component
 
-    init(red: UInt8, green: UInt8, blue: UInt8, alpha: UInt8 = 0xFF) {
+    public init(red: UInt8, green: UInt8, blue: UInt8, alpha: UInt8 = 0xFF) {
         self.red = red
         self.green = green
         self.blue = blue
         self.alpha = alpha
     }
+
+    public var isOpaque: Bool { alpha == 0xFF }
 }
 
 public extension Color {
     static var white: Color { .init(red: 0xFF, green: 0xFF, blue: 0xFF) }
 }
 
-extension Color: StringConvertible {
-    internal init(string hexString: String) throws(Error) {
+extension Color: XMLStringConvertible {
+    internal init(xmlString hexString: String) throws(Error) {
         guard hexString.hasPrefix("#") else {
             throw .malformedColorString(hexString)
         }
@@ -49,17 +51,19 @@ extension Color: StringConvertible {
         blue = UInt8(number >> 0 & 0xFF)
     }
 
-    var string: String {
+    var xmlStringValue: String {
         String(format: "#%02x%02x%02x%02x", red, green, blue, alpha)
     }
 }
 
-extension Color: XMLConvertible {
-    var xmlElement: XMLElement {
-        XMLElement("m:color", ["color": string])
+extension Color: XMLElementComposable {
+    static let elementIdentifier = Materials.color
+
+    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
+        [.m.colorAttribute: self]
     }
 
     init(xmlElement: XMLElement) throws(Error) {
-        self = try .init(string: try xmlElement["color"])
+        self = try xmlElement[.m.colorAttribute]
     }
 }

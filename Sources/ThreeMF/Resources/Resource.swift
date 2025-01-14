@@ -17,7 +17,7 @@ public struct PropertyReference: Hashable {
     }
 }
 
-internal typealias ResourceInternal = (Resource & XMLConvertibleNamed)
+internal typealias ResourceInternal = (Resource & XMLElementComposable)
 
 internal let allResourceTypes: [any ResourceInternal.Type] = [
     Object.self, ColorGroup.self, BaseMaterialGroup.self,
@@ -27,6 +27,6 @@ internal let allResourceTypes: [any ResourceInternal.Type] = [
     SpecularTextureDisplayProperties.self, MetallicTextureDisplayProperties.self,
 ]
 
-internal let resourceTypePerElementName: [String: any ResourceInternal.Type] = {
-    Dictionary(uniqueKeysWithValues: allResourceTypes.map { ($0.elementName, $0) })
+internal let resourceTypePerElementIdentifier: [ElementIdentifier: any ResourceInternal.Type] = {
+    Dictionary(uniqueKeysWithValues: allResourceTypes.map { ($0.elementIdentifier, $0) })
 }()

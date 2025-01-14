@@ -4,23 +4,21 @@ import FoundationXML
 #endif
 
 // m:texture2d
-public struct Texture2D: Resource, XMLConvertibleNamed {
-    static let elementName = "m:texture2d"
-
+public struct Texture2D: Resource {
     public var id: ResourceID
     public var pathURL: URL
     public var contentType: ContentType
-    public var tileStyleU: TileStyle
-    public var tileStyleV: TileStyle
-    public var filter: Filter
+    public var tileStyleU: TileStyle?
+    public var tileStyleV: TileStyle?
+    public var filter: Filter?
 
     public init(
         id: ResourceID,
         pathURL: URL,
         contentType: ContentType,
-        tileStyleU: TileStyle = .default,
-        tileStyleV: TileStyle = .default,
-        filter: Filter = .default
+        tileStyleU: TileStyle? = nil,
+        tileStyleV: TileStyle? = nil,
+        filter: Filter? = nil
     ) {
         self.id = id
         self.pathURL = pathURL
@@ -32,12 +30,16 @@ public struct Texture2D: Resource, XMLConvertibleNamed {
 }
 
 public extension Texture2D {
-    enum ContentType: String, StringConvertible, Hashable, Sendable {
+    var effectiveTileStyles: (U: TileStyle, V: TileStyle) {
+        (tileStyleU ?? .default, tileStyleV ?? .default)
+    }
+
+    enum ContentType: String, XMLStringConvertible, Hashable, Sendable {
         case png = "image/png"
         case jpeg = "image/jpeg"
     }
 
-    enum TileStyle: String, StringConvertible, Hashable, Sendable {
+    enum TileStyle: String, XMLStringConvertible, Hashable, Sendable {
         case wrap
         case mirror
         case clamp
@@ -46,7 +48,7 @@ public extension Texture2D {
         public static let `default` = Self.wrap
     }
 
-    enum Filter: String, StringConvertible, Hashable, Sendable {
+    enum Filter: String, XMLStringConvertible, Hashable, Sendable {
         case auto
         case linear
         case nearest
@@ -55,25 +57,27 @@ public extension Texture2D {
     }
 }
 
-internal extension Texture2D {
-    var xmlElement: XMLElement {
-        XMLElement("m:texture2d", [
-            "id": String(id),
-            "path": pathURL.absoluteString,
-            "contenttype": contentType.rawValue,
-            "tilestyleu": tileStyleU.rawValue,
-            "tilestylev": tileStyleV.rawValue,
-            "filter": filter.rawValue
-        ])
-    }
-    
-    init(xmlElement: XMLElement) throws(Error) {
-        id = try xmlElement["id"]
-        pathURL = try xmlElement["path"]
-        contentType = try xmlElement["contenttype"]
+extension Texture2D: XMLElementComposable {
+    static let elementIdentifier = Materials.texture2D
 
-        tileStyleU = try xmlElement["tilestyleu", default: .default]
-        tileStyleV = try xmlElement["tilestylev", default: .default]
-        filter = try xmlElement["filter", default: .default]
+    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
+        [
+            .m.id: id,
+            .m.path: pathURL.relativePath,
+            .m.contentType: contentType,
+            .m.tileStyleU: tileStyleU,
+            .m.tileStyleV: tileStyleV,
+            .m.filter: filter
+        ]
+    }
+
+    init(xmlElement: XMLElement) throws(Error) {
+        id = try xmlElement[.m.id]
+        pathURL = try xmlElement[.m.path]
+        contentType = try xmlElement[.m.contentType]
+
+        tileStyleU = try? xmlElement[.m.tileStyleU]
+        tileStyleV = try? xmlElement[.m.tileStyleV]
+        filter = try? xmlElement[.m.filter]
     }
 }

@@ -12,46 +12,38 @@ public extension Mesh {
     }
 }
 
-extension Mesh.TriangleSet: XMLConvertible {
-    var xmlElement: XMLElement {
-        XMLElement("t:triangleset", [
-            "name": name,
-            "identifier": identifier
-        ], children: refs)
+extension Mesh.TriangleSet: XMLElementComposable {
+    static let elementIdentifier = TriangleSets.triangleSet
+
+    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
+        [
+            .t.name: name,
+            .t.identifier: identifier
+        ]
     }
 
-    var refs: [XMLElement] {
+    var children: [(any XMLConvertible)?] {
         triangleIndices.rangeView.map {
             if $0.count == 1 {
-                XMLElement("t:ref", ["index": String($0.lowerBound)])
+                XMLElement(.t.ref, [.t.index: $0.lowerBound]).literal
             } else {
-                XMLElement("t:refrange", ["startindex": String($0.lowerBound), "endindex": String($0.upperBound)])
+                XMLElement(.t.refRange, [.t.startIndex: $0.lowerBound, .t.endIndex: $0.upperBound]).literal
             }
         }
     }
 
     init(xmlElement: XMLElement) throws(Error) {
-        name = try xmlElement["name"]
-        identifier = try xmlElement["identifier"]
+        name = try xmlElement[.t.name]
+        identifier = try xmlElement[.t.identifier]
 
         triangleIndices = []
-        for element in xmlElement.elements(forName: "t:ref") {
-            triangleIndices.insert(try element["index"])
+
+        for element in xmlElement[.t.ref] {
+            triangleIndices.insert(try element[.t.index])
         }
-        for element in xmlElement.elements(forName: "t:refrange") {
-            let range = try (element["startindex"] as Int)..<(element["endindex"] as Int)
+        for element in xmlElement[.t.refRange] {
+            let range = try (element[.t.startIndex] as Int)..<(element[.t.endIndex] as Int)
             triangleIndices.insert(integersIn: range)
         }
-    }
-}
-
-// t:trianglesets
-internal extension [Mesh.TriangleSet] {
-    var xmlElement: XMLElement? {
-        isEmpty ? nil : XMLElement("trianglesets", children: map(\.xmlElement))
-    }
-
-    init(xmlElement: XMLElement) throws(Error) {
-        self = try xmlElement[elements: "triangleset"]
     }
 }

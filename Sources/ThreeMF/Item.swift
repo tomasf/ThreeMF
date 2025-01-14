@@ -10,27 +10,37 @@ public struct Item {
     public var metadata: [Metadata]
     public var printable: Bool? // Prusa extension
 
-    init(objectID: ResourceID, transform: Matrix3D? = nil, partNumber: String? = nil, metadata: [Metadata] = []) {
+    public init(objectID: ResourceID, transform: Matrix3D? = nil, partNumber: String? = nil, metadata: [Metadata] = [], printable: Bool? = nil) {
         self.objectID = objectID
         self.transform = transform
         self.partNumber = partNumber
         self.metadata = metadata
+        self.printable = printable
     }
 }
 
-extension Item: XMLConvertible {
-    var xmlElement: XMLElement {
-        XMLElement("item", [
-            "objectid": String(objectID),
-            "transform": transform?.string,
-            "partnumber": partNumber
-        ], children: [metadata.xmlElement])
+extension Item: XMLElementComposable {
+    static let elementIdentifier = Core.item
+
+    var attributes: [AttributeIdentifier : (any XMLStringConvertible)?] {
+        [
+            Core.objectID: objectID,
+            Core.transform: transform,
+            Core.partNumber: partNumber,
+            Core.printable: printable
+        ]
+    }
+
+    var children: [(any XMLConvertible)?] {
+        [metadata.wrappedNonEmpty(in: Core.metadataGroup)]
     }
 
     init(xmlElement: XMLElement) throws(Error) {
-        objectID = try xmlElement["objectid"]
-        transform = try? xmlElement["transform"]
-        partNumber = try? xmlElement["partnumber"]
-        metadata = try .init(xmlElement: try? xmlElement[element: "metadatagroup"])
+        objectID = try xmlElement[Core.objectID]
+        transform = try? xmlElement[Core.transform]
+        partNumber = try? xmlElement[Core.partNumber]
+
+        metadata = try ((try? xmlElement[Core.metadataGroup])?[Core.metadata]) ?? []
+        printable = try? xmlElement[Core.printable]
     }
 }

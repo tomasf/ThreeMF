@@ -3,7 +3,7 @@ import Foundation
 import FoundationXML
 #endif
 
-public enum Unit: String, Sendable {
+public enum Unit: String, Sendable, XMLStringConvertible {
     case micron
     case millimeter
     case centimeter
@@ -12,7 +12,7 @@ public enum Unit: String, Sendable {
     case meter
 }
 
-extension Unit: StringConvertible {
+public extension Unit {
     static let `default` = Self.millimeter
 
     var millimetersPerUnit: Double {

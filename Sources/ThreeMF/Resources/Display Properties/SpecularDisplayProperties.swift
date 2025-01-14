@@ -4,31 +4,52 @@ import FoundationXML
 #endif
 
 // m:pbspeculardisplayproperties
-public struct SpecularDisplayProperties: Resource, XMLConvertibleNamed {
-    static let elementName = "m:pbspeculardisplayproperties"
+public struct SpecularDisplayProperties: Resource {
+    static let elementIdentifier = Materials.specularDisplayProperties
 
     public var id: ResourceID
     public var speculars: [Specular]
+
+    public init(id: ResourceID, speculars: [Specular] = []) {
+        self.id = id
+        self.speculars = speculars
+    }
 }
 
-extension SpecularDisplayProperties: XMLConvertible {
-    var xmlElement: XMLElement {
-        XMLElement("m:pbspeculardisplayproperties", [
-            "id": String(id)
-        ], children: speculars)
+public extension SpecularDisplayProperties {
+    @discardableResult
+    mutating func addSpecular(_ specular: Specular) -> ResourceIndex {
+        speculars.append(specular)
+        return speculars.endIndex - 1
+    }
+}
+
+extension SpecularDisplayProperties: XMLElementComposable {
+    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
+        [.m.id: id]
+    }
+
+    var children: [(any XMLConvertible)?] {
+        speculars
     }
     
     init(xmlElement: XMLElement) throws(Error) {
-        id = try xmlElement["id"]
-        speculars = try xmlElement[elements: "m:pbspecular"]
+        id = try xmlElement[.m.id]
+        speculars = try xmlElement[.m.specular]
     }
 }
 
 // m:pbspecular
-public struct Specular {
+public struct Specular: Hashable {
     public var name: String
     public var specularColor: Color?
     public var glossiness: Double?
+
+    public init(name: String, specularColor: Color? = nil, glossiness: Double? = nil) {
+        self.name = name
+        self.specularColor = specularColor
+        self.glossiness = glossiness
+    }
 }
 
 public extension Specular {
@@ -37,18 +58,20 @@ public extension Specular {
     }
 }
 
-extension Specular: XMLConvertible {
-    var xmlElement: XMLElement {
-        XMLElement("m:pbspecular", [
-            "name": name,
-            "specularcolor": specularColor?.string,
-            "glossiness": glossiness.map { String($0) }
-        ])
+extension Specular: XMLElementComposable {
+    static let elementIdentifier = Materials.specular
+
+    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
+        [
+            .m.name: name,
+            .m.specularColor: specularColor,
+            .m.glossiness: glossiness
+        ]
     }
     
     init(xmlElement: XMLElement) throws(Error) {
-        name = try xmlElement["name"]
-        specularColor = try? xmlElement["specularcolor"]
-        glossiness = try? xmlElement["glossiness"]
+        name = try xmlElement[.m.name]
+        specularColor = try? xmlElement[.m.specularColor]
+        glossiness = try? xmlElement[.m.glossiness]
     }
 }

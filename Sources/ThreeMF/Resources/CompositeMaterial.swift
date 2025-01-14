@@ -4,9 +4,7 @@ import FoundationXML
 #endif
 
 // m:compositematerials
-public struct CompositeMaterialGroup: Resource, XMLConvertibleNamed {
-    static let elementName = "m:compositematerials"
-
+public struct CompositeMaterialGroup: Resource {
     public var id: ResourceID
     public var baseMaterialGroupID: ResourceID // matid
     public var baseMaterialIndices: ResourceIndices  // Indices inside the material group
@@ -22,34 +20,27 @@ public struct CompositeMaterialGroup: Resource, XMLConvertibleNamed {
     }
 }
 
-internal extension CompositeMaterialGroup {
-    var xmlElement: XMLElement {
-        XMLElement("m:compositematerials", [
-            "id": String(id),
-            "matid": String(baseMaterialGroupID),
-            "matindices": baseMaterialIndices.string,
-            "displaypropertiesid": displayPropertiesID.map { String($0) }
-        ], children: composites.map(\.compositeXMLElement))
+extension CompositeMaterialGroup: XMLElementComposable {
+    static let elementIdentifier = Materials.compositeMaterials
+
+    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
+        [
+            .m.id: id,
+            .m.matID: baseMaterialGroupID,
+            .m.matIndices: baseMaterialIndices.string,
+            .m.displayPropertiesID: displayPropertiesID
+        ]
+    }
+
+    var children: [(any XMLConvertible)?] {
+        composites.map { XMLElement(.m.composite, [.m.values: $0.string]).literal }
     }
 
     init(xmlElement: XMLElement) throws(Error) {
-        id = try xmlElement["id"]
-        baseMaterialGroupID = try xmlElement["matid"]
-        baseMaterialIndices = try xmlElement["matindices"]
-        displayPropertiesID = try? xmlElement["displaypropertiesid"]
-
-        composites = try xmlElement.elements(named: "m:composite") { e throws(Error) in
-            try Numbers(compositeXMLElement: e)
-        }
-    }
-}
-
-internal extension Numbers {
-    var compositeXMLElement: XMLElement {
-        XMLElement("m:composite", ["values": string])
-    }
-
-    init(compositeXMLElement xmlElement: XMLElement) throws(Error) {
-        self = try xmlElement["values"]
+        id = try xmlElement[.m.id]
+        baseMaterialGroupID = try xmlElement[.m.matID]
+        baseMaterialIndices = try xmlElement[.m.matIndices]
+        displayPropertiesID = try? xmlElement[.m.displayPropertiesID]
+        composites = try xmlElement[.m.composite].map { n throws(Error) in try n[.m.values] }
     }
 }

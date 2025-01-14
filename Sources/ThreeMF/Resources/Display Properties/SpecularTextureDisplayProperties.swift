@@ -4,8 +4,8 @@ import FoundationXML
 #endif
 
 // m:pbspeculartexturedisplayproperties
-public struct SpecularTextureDisplayProperties: Resource, XMLConvertibleNamed {
-    static let elementName = "m:pbspeculartexturedisplayproperties"
+public struct SpecularTextureDisplayProperties: Resource, XMLElementComposable {
+    static let elementIdentifier = Materials.specularTextureDisplayProperties
 
     public var id: ResourceID
     public var name: String
@@ -14,6 +14,16 @@ public struct SpecularTextureDisplayProperties: Resource, XMLConvertibleNamed {
     public var diffuseFactor: Color?
     public var specularFactor: Color?
     public var glossinessFactor: Double?
+
+    public init(id: ResourceID, name: String, specularTextureID: ResourceID, glossinessTextureID: ResourceID, diffuseFactor: Color? = nil, specularFactor: Color? = nil, glossinessFactor: Double? = nil) {
+        self.id = id
+        self.name = name
+        self.specularTextureID = specularTextureID
+        self.glossinessTextureID = glossinessTextureID
+        self.diffuseFactor = diffuseFactor
+        self.specularFactor = specularFactor
+        self.glossinessFactor = glossinessFactor
+    }
 }
 
 public extension SpecularTextureDisplayProperties {
@@ -23,25 +33,25 @@ public extension SpecularTextureDisplayProperties {
 }
 
 internal extension SpecularTextureDisplayProperties {
-    var xmlElement: XMLElement {
-        XMLElement("m:pbspeculartexturedisplayproperties", [
-            "id": String(id),
-            "name": name,
-            "speculartextureid": String(specularTextureID),
-            "glossinesstextureid": String(glossinessTextureID),
-            "diffusefactor": diffuseFactor?.string,
-            "specularfactor": specularFactor?.string,
-            "glossinessfactor": glossinessFactor.map { String($0) }
-        ])
+    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
+        [
+            .m.id: id,
+            .m.name: name,
+            .m.specularTextureID: specularTextureID,
+            .m.glossinessTextureID: glossinessTextureID,
+            .m.diffuseFactor: diffuseFactor,
+            .m.specularFactor: specularFactor,
+            .m.glossinessFactor: glossinessFactor
+        ]
     }
-    
+
     init(xmlElement: XMLElement) throws(Error) {
-        id = try xmlElement["id"]
-        name = try xmlElement["name"]
-        specularTextureID = try xmlElement["speculartextureid"]
-        glossinessTextureID = try xmlElement["glossinesstextureid"]
-        diffuseFactor = try? xmlElement["diffusefactor"]
-        specularFactor = try? xmlElement["specularfactor"]
-        glossinessFactor = try? xmlElement["glossinessfactor"]
+        id = try xmlElement[.m.id]
+        name = try xmlElement[.m.name]
+        specularTextureID = try xmlElement[.m.specularTextureID]
+        glossinessTextureID = try xmlElement[.m.glossinessTextureID]
+        diffuseFactor = try? xmlElement[.m.diffuseFactor]
+        specularFactor = try? xmlElement[.m.specularFactor]
+        glossinessFactor = try? xmlElement[.m.glossinessFactor]
     }
 }

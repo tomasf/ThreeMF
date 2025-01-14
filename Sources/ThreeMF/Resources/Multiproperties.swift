@@ -4,9 +4,7 @@ import FoundationXML
 #endif
 
 // m:multiproperties
-public struct Multiproperties: Resource, XMLConvertibleNamed {
-    static let elementName = "m:multiproperties"
-
+public struct Multiproperties: Resource {
     public var id: ResourceID
     public var propertyGroupIDs: ResourceIndices // pids
     public var blendMethods: [BlendMethod]?
@@ -39,45 +37,33 @@ public extension Multiproperties {
         }
     }
 
-    enum BlendMethod: String, Hashable, StringConvertible {
+    enum BlendMethod: String, Hashable, XMLStringConvertible {
         case mix
         case multiply
-
-        public init(string: String) throws(Error) {
-            guard let value = BlendMethod(rawValue: string) else {
-                throw .malformedBlendMethod(string)
-            }
-            self = value
-        }
     }
 }
 
-internal extension Multiproperties {
-    var xmlElement: XMLElement {
-        XMLElement("m:multiproperties", [
-            "id": String(id),
-            "pids": propertyGroupIDs.string,
-            "blendMethods": blendMethods?.map(\.rawValue).joined(separator: " "),
-        ], children: elements.map(\.multiXMLElement))
+extension Multiproperties: XMLElementComposable {
+    static let elementIdentifier = Materials.multiproperties
+
+    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
+        [
+            .m.id: id,
+            .m.pids: propertyGroupIDs.string,
+            .m.blendMethods: blendMethods?.string
+        ]
+    }
+
+    var children: [(any XMLConvertible)?] {
+        elements.map { XMLElement(.m.multi, [.m.pIndices: $0.string]).literal }
+
     }
 
     init(xmlElement: XMLElement) throws(Error) {
-        id = try xmlElement["id"]
-        propertyGroupIDs = try xmlElement["pids"]
+        id = try xmlElement[.m.id]
+        propertyGroupIDs = try xmlElement[.m.pids]
 
-        blendMethods = try? xmlElement["blendMethods"]
-        elements = try xmlElement.elements(named: "multi") { e throws(Error) in
-            try ResourceIndices(multiXMLElement: e)
-        }
-    }
-}
-
-internal extension ResourceIndices {
-    var multiXMLElement: XMLElement {
-        XMLElement("multi", ["pindices": string])
-    }
-
-    init(multiXMLElement xmlElement: XMLElement) throws(Error) {
-        self = try xmlElement["pindices"]
+        blendMethods = try? xmlElement[.m.blendMethods]
+        elements = try xmlElement[.m.multi].map { n throws(Error) in try n[.m.pIndices] }
     }
 }

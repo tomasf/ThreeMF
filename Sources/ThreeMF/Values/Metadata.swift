@@ -5,19 +5,19 @@ import FoundationXML
 
 // metadata
 public struct Metadata {
-    let name: Name
-    let value: String
-    let preserve: Bool?
-    let type: String?
+    public let name: Name
+    public let value: String
+    public let preserve: Bool?
+    public let type: String?
 
-    init(name: Name, value: String, preserve: Bool = false, type: String? = nil) {
+    public init(name: Name, value: String, preserve: Bool = false, type: String? = nil) {
         self.name = name
         self.value = value
         self.preserve = preserve
         self.type = type
     }
 
-    enum Name: Hashable {
+    public enum Name: Hashable, XMLStringConvertible {
         case title
         case designer
         case description
@@ -29,7 +29,7 @@ public struct Metadata {
         case application
         case custom (String)
 
-        var key: String {
+        var xmlStringValue: String {
             switch self {
             case .title: "Title"
             case .designer: "Designer"
@@ -44,45 +44,34 @@ public struct Metadata {
             }
         }
 
-        init(key: String) {
+        init(xmlString: String) {
             let wellknown: [Self] = [.title, .designer, .description, .copyright, .licenseTerms, .rating, .creationDate, .modificationDate, .application]
-            if let match = wellknown.first(where: { $0.key == key }) {
+            if let match = wellknown.first(where: { $0.xmlStringValue == xmlString }) {
                 self = match
             } else {
-                self = .custom(key)
+                self = .custom(xmlString)
             }
         }
     }
 }
 
-extension Metadata: XMLConvertible {
-    var xmlElement: XMLElement {
-        XMLElement("metadata", [
-            "name": name.key,
-            "preserve": preserve.map { $0 ? "1" : "0" },
-            "type": type
-        ], text: value)
+extension Metadata: XMLElementComposable {
+    static let elementIdentifier = Core.metadata
+
+    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
+        [
+            Core.name: name,
+            Core.preserve: preserve,
+            Core.type: type
+        ]
     }
+
+    var text: String? { value }
 
     init(xmlElement: XMLElement) throws(Error) {
-        name = .init(key: try xmlElement["name"])
-        preserve = (try? xmlElement["preserve"]) ?? false
-        type = try? xmlElement["type"]
+        name = try xmlElement[Core.name]
+        preserve = try? xmlElement[Core.preserve]
+        type = try? xmlElement[Core.type]
         value = xmlElement.stringValue ?? ""
-    }
-}
-
-// metadatagroup
-internal extension [Metadata] {
-    var xmlElement: XMLElement? {
-        isEmpty ? nil : XMLElement("metadatagroup", children: map(\.xmlElement))
-    }
-
-    init(xmlElement: XMLElement?) throws(Error) {
-        if let xmlElement {
-            self = try xmlElement[elements: "metadata"]
-        } else {
-            self = []
-        }
     }
 }
