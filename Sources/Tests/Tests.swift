@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationXML)
+import FoundationXML
+#endif
 import Testing
 @testable import ThreeMF
 
@@ -90,9 +93,9 @@ extension XMLElement {
     }
 
     func expectEquivalence(with other: XMLElement) {
-        #expect(canonicalAttributes == other.canonicalAttributes, "Attributes differ: \(xPath)")
+        #expect(canonicalAttributes == other.canonicalAttributes, "Attributes differ: \(xPath ?? "")")
         guard canonicalAttributes == other.canonicalAttributes else { return }
-        #expect(text == other.text, "Element text differs: \(xPath)")
+        #expect(text == other.text, "Element text differs: \(xPath ?? "")")
         guard stringValue == other.stringValue else { return }
 
         let elements1 = canonicalElements
@@ -104,7 +107,7 @@ extension XMLElement {
         for identity in allIdentities {
             let elements = elements1[identity] ?? []
             let otherElements = elements2[identity] ?? []
-            #expect(elements.count == otherElements.count, "Number of elements of type \(identity) differs: \(xPath)")
+            #expect(elements.count == otherElements.count, "Number of elements of type \(identity) differs: \(xPath ?? "")")
 
             guard elements.count == otherElements.count else { return }
             for (index, element) in elements.enumerated() {
