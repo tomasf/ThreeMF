@@ -4,7 +4,7 @@ import FoundationXML
 #endif
 
 public extension Mesh {
-    public struct Vertex: Hashable {
+    struct Vertex: Hashable {
         public let x: Double
         public let y: Double
         public let z: Double

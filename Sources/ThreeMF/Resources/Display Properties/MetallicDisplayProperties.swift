@@ -52,12 +52,6 @@ public struct Metallic: Hashable {
     }
 }
 
-public extension Metallic {
-    var effectiveValues: (metallicness: Double, roughness: Double) {
-        (metallicness ?? 0, roughness ?? 1)
-    }
-}
-
 extension Metallic: XMLElementComposable {
     static let elementIdentifier = Materials.metallic
 

@@ -76,7 +76,8 @@ extension Model: XMLElementComposable {
         ]
     }
 
-    init(xmlElement element: XMLElement) throws(Error) {
+#warning("temp")
+    public init(xmlElement element: XMLElement) throws(Error) {
         unit = try? element[Core.unit]
         xmlLanguageCode = try? element[XML.lang]
         languageCode = try? element[Core.language]
