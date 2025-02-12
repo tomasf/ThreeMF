@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 // CT_Color and m:color
 public struct Color: Hashable {
@@ -63,7 +61,7 @@ extension Color: XMLElementComposable {
         [.m.colorAttribute: self]
     }
 
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         self = try xmlElement[.m.colorAttribute]
     }
 }

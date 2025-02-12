@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 // t:triangleset
 public extension Mesh {
@@ -25,14 +23,14 @@ extension Mesh.TriangleSet: XMLElementComposable {
     var children: [(any XMLConvertible)?] {
         triangleIndices.rangeView.map {
             if $0.count == 1 {
-                XMLElement(.t.ref, [.t.index: $0.lowerBound]).literal
+                LiteralElement(name: .t.ref, attributes: [.t.index: $0.lowerBound])
             } else {
-                XMLElement(.t.refRange, [.t.startIndex: $0.lowerBound, .t.endIndex: $0.upperBound]).literal
+                LiteralElement(name: .t.refRange, attributes: [.t.startIndex: $0.lowerBound, .t.endIndex: $0.upperBound])
             }
         }
     }
 
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         name = try xmlElement[.t.name]
         identifier = try xmlElement[.t.identifier]
 

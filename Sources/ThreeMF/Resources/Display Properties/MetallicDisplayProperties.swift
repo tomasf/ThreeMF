@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 // m:pbmetallicdisplayproperties
 public struct MetallicDisplayProperties: Resource, XMLElementComposable {
@@ -33,7 +31,7 @@ internal extension MetallicDisplayProperties {
         metallics
     }
 
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         id = try xmlElement[.m.id]
         metallics = try xmlElement[.m.metallic]
     }
@@ -63,7 +61,7 @@ extension Metallic: XMLElementComposable {
         ]
     }
 
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         name = try xmlElement[.m.name]
         metallicness = try xmlElement[.m.metallicness]
         roughness = try xmlElement[.m.roughness]

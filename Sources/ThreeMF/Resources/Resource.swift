@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 public protocol Resource {
     var id: ResourceID { get set }

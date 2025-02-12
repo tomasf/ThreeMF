@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 // m:translucentdisplayproperties
 public struct TranslucentDisplayProperties: Resource {
@@ -25,7 +23,7 @@ extension TranslucentDisplayProperties: XMLElementComposable {
         translucents
     }
 
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         id = try xmlElement[.m.id]
         translucents = try xmlElement[.m.translucent]
     }
@@ -58,7 +56,7 @@ extension Translucent: XMLElementComposable {
         ]
     }
     
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         name = try xmlElement[.m.name]
         attenuation = try xmlElement[.m.attenuation]
         refractiveIndices = try xmlElement[.m.refractiveIndex]

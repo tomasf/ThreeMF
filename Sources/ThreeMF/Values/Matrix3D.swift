@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 // ST_Matrix3D
 public struct Matrix3D: XMLStringConvertible {

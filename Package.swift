@@ -8,17 +8,20 @@ let package = Package(
         .library(name: "ThreeMF", targets: ["ThreeMF"])
     ],
     dependencies: [
-        .package(url: "https://github.com/tomasf/Zip.git", from: "2.0.0")
+        .package(url: "https://github.com/tomasf/Zip.git", from: "2.0.0"),
+        .package(path: "../Nodal")
     ],
     targets: [
         .target(
             name: "ThreeMF",
-            dependencies: ["Zip"]
+            dependencies: ["Zip", "Nodal"],
+            swiftSettings: [.interoperabilityMode(.Cxx)]
         ),
         .testTarget(
             name: "Tests",
             dependencies: ["ThreeMF"],
-            resources: [.copy("3MF")]
+            resources: [.copy("3MF")],
+            swiftSettings: [.interoperabilityMode(.Cxx)]
         )
     ]
 )

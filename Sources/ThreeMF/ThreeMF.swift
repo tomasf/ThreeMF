@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 public typealias ResourceID = Int
 public typealias ResourceIndex = Int
@@ -12,8 +10,9 @@ public enum Error: Swift.Error {
     case failedToReadArchiveFile (name: String, error: Swift.Error?)
     case malformedRelationships ((any Swift.Error)?)
 
-    case missingElement (name: String)
-    case missingAttribute (name: String)
+    case missingElement (name: ExpandedName)
+    case missingAttribute (name: ExpandedName)
+    case missingObjectContent
 
     case malformedAttribute (name: String)
     case malformedTransform (String)

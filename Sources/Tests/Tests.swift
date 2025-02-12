@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 import Testing
 @testable import ThreeMF
 
@@ -17,9 +15,12 @@ struct Tests {
 
             let xmlInput = try package.modelRootElement()
             let model = try package.model()
-            let xmlOutput = model.xmlElement
 
-            xmlInput.expectEquivalence(with: xmlOutput)
+            let document = Document()
+            let root = document.makeRootElement(name: "")
+            model.build(element: root)
+
+            xmlInput.expectEquivalence(with: root)
 
             let writer = PackageWriter()
             writer.model = model
@@ -50,16 +51,6 @@ extension URL {
 }
 
 extension XMLNode {
-    var canonicalIdentity: String? {
-        let local = localName ?? ""
-        if let uri {
-            guard uri != "http://schemas.openxmlformats.org/markup-compatibility/2006" else { return nil }
-            return uri + " " + local
-        } else {
-            return local
-        }
-    }
-
     static let numericalAttributes = Set(["x", "y", "z", "transform"])
     var attributeValue: String {
         let string = stringValue ?? ""
@@ -73,41 +64,29 @@ extension XMLNode {
     }
 }
 
-extension XMLElement {
-    var text: String {
-        (children ?? []).filter { $0.kind == .text }.compactMap(\.stringValue).joined()
-    }
-
-    var canonicalAttributes: [String: String] {
-        Dictionary(uniqueKeysWithValues: (attributes ?? []).compactMap {
-            guard let id = $0.canonicalIdentity else { return nil }
-            return (id, $0.attributeValue)
-        })
-    }
-
-    var canonicalElements: [String: [XMLElement]] {
-        (children ?? []).compactMap { $0 as? XMLElement }.reduce(into: [:]) { result, element in
-            guard let id = element.canonicalIdentity else { return }
-            result[id, default: []].append(element)
+extension Node {
+    var canonicalElements: [ExpandedName: [Element]] {
+        elements.reduce(into: [:]) { result, element in
+            result[element.expandedName, default: []].append(element)
         }
     }
 
-    func expectEquivalence(with other: XMLElement) {
-        #expect(canonicalAttributes == other.canonicalAttributes, "Attributes differ: \(xPath ?? "")")
-        guard canonicalAttributes == other.canonicalAttributes else { return }
-        #expect(text == other.text, "Element text differs: \(xPath ?? "")")
-        guard stringValue == other.stringValue else { return }
+    func expectEquivalence(with other: Node) {
+        #expect(attributes == other.attributes, "Attributes differ: \(path ?? "")")
+        guard attributes == other.attributes else { return }
+        #expect(concatenatedText == other.concatenatedText, "Element text differs: \(path ?? "")")
+        guard concatenatedText == other.concatenatedText else { return }
 
         let elements1 = canonicalElements
         let elements2 = other.canonicalElements
         let allIdentities = Set(elements1.keys).union(elements2.keys)
-        #expect(elements1.count == elements2.count, "Number of element types differs")
+        #expect(elements1.count == elements2.count, "Number of element types differs in \(path). \(elements1.keys) vs. \(elements2.keys)")
         guard elements1.count == elements2.count else { return }
 
         for identity in allIdentities {
             let elements = elements1[identity] ?? []
             let otherElements = elements2[identity] ?? []
-            #expect(elements.count == otherElements.count, "Number of elements of type \(identity) differs: \(xPath ?? "")")
+            #expect(elements.count == otherElements.count, "Number of elements of type \(identity) differs: \(path ?? "")")
 
             guard elements.count == otherElements.count else { return }
             for (index, element) in elements.enumerated() {

@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 // basematerials
 public struct BaseMaterialGroup: Resource {
@@ -28,7 +26,7 @@ extension BaseMaterialGroup: XMLElementComposable {
 
     var children: [(any XMLConvertible)?] { properties }
 
-    public init(xmlElement: XMLElement) throws(Error) {
+    public init(xmlElement: Node) throws(Error) {
         id = try xmlElement[Core.id]
         displayPropertiesID = try? xmlElement[.m.displayPropertiesID]
         properties = try xmlElement[Core.base]
@@ -56,7 +54,7 @@ extension BaseMaterial: XMLElementComposable {
         ]
     }
 
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         name = try xmlElement[Core.name]
         displayColor = try xmlElement[Core.displayColor]
     }

@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 internal struct ContentTypes: Sendable {
     private var items: [Item] = []
@@ -23,24 +21,23 @@ internal struct ContentTypes: Sendable {
 }
 
 extension ContentTypes {
-    func xmlDocument() -> XMLDocument {
-        let root = XMLElement("Types", children: items.map { item in
+    func xmlDocument() -> Document {
+        let document = Document()
+        let root = document.makeDocumentElement(name: "Types", defaultNamespace: "http://schemas.openxmlformats.org/package/2006/content-types")
+
+        for item in items {
             switch item {
             case .default (let fileExtension, let mimeType):
-                XMLElement("Default", [
-                    "ContentType": mimeType,
-                    "Extension": fileExtension
-                ])
-            case .override(let part, let mimeType):
-                XMLElement("Override", [
-                    "PartName": part.relativePath,
-                    "ContentType": mimeType
-                ])
+                let child = root.addElement("Default")
+                child[attribute: "ContentType"] = mimeType
+                child[attribute: "Extension"] = fileExtension
+            case .override (let part, let mimeType):
+                let child = root.addElement("Override")
+                child[attribute: "PartName"] = part.relativePath
+                child[attribute: "ContentType"] = mimeType
             }
-        })
-
-        root.declareNamespace("http://schemas.openxmlformats.org/package/2006/content-types")
-        return XMLDocument(rootElement: root)
+        }
+        return document
     }
 }
 

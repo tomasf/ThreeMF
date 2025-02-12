@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 public struct Mesh {
     public var vertices: [Vertex]
@@ -26,7 +24,7 @@ extension Mesh: XMLElementComposable {
         ]
     }
 
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         triangles = try xmlElement[Core.triangles][Core.triangle]
         vertices = try xmlElement[Core.vertices][Core.vertex]
         triangleSets = (try? xmlElement[.t.triangleSets][.t.triangleSet]) ?? []

@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 public enum Unit: String, Sendable, XMLStringConvertible {
     case micron

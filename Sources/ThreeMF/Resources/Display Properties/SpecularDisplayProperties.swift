@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 // m:pbspeculardisplayproperties
 public struct SpecularDisplayProperties: Resource {
@@ -33,7 +31,7 @@ extension SpecularDisplayProperties: XMLElementComposable {
         speculars
     }
     
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         id = try xmlElement[.m.id]
         speculars = try xmlElement[.m.specular]
     }
@@ -69,7 +67,7 @@ extension Specular: XMLElementComposable {
         ]
     }
     
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         name = try xmlElement[.m.name]
         specularColor = try? xmlElement[.m.specularColor]
         glossiness = try? xmlElement[.m.glossiness]

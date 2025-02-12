@@ -1,8 +1,6 @@
 import Foundation
 import Zip
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 public struct Model {
     public var unit: Unit?
@@ -70,14 +68,13 @@ extension Model: XMLElementComposable {
         guard let xmlConvertibles = resources as? [any XMLConvertible] else {
             fatalError("Resources must conform to XMLCConvertible")
         }
-        return [
-            XMLElement(Core.resources, children: xmlConvertibles).literal,
+        return metadata + [
+            LiteralElement(name: Core.resources, children: xmlConvertibles),
             buildItems.wrapped(in: Core.build),
         ]
     }
 
-#warning("temp")
-    public init(xmlElement element: XMLElement) throws(Error) {
+    public init(xmlElement element: Node) throws(Error) {
         unit = try? element[Core.unit]
         xmlLanguageCode = try? element[XML.lang]
         languageCode = try? element[Core.language]
@@ -86,7 +83,7 @@ extension Model: XMLElementComposable {
 
         metadata = try element[Core.metadata]
 
-        let resourcesElement: XMLElement = try element[Core.resources]
+        let resourcesElement: Node = try element[Core.resources]
 
         self.resources = try resourcesElement.elements.map { e throws(Error) in
             guard let resourceType = resourceTypePerElementIdentifier[e.identifier] else {
@@ -96,5 +93,42 @@ extension Model: XMLElementComposable {
         }.compactMap { $0 }
 
         buildItems = try element[Core.build][Core.item]
+    }
+}
+
+struct LiteralElement: XMLConvertible {
+    let name: ElementIdentifier
+    let attributes: [AttributeIdentifier: (any XMLStringConvertible)?]
+    let children: [any XMLConvertible]
+
+    init(name: ElementIdentifier, attributes: [AttributeIdentifier: (any XMLStringConvertible)?] = [:], children: [any XMLConvertible] = []) {
+        self.name = name
+        self.attributes = attributes
+        self.children = children
+    }
+
+    func build(element: Node) {
+        element.expandedName = name.identifier
+
+        for (id, attributeValue) in attributes {
+            guard let value = attributeValue?.xmlStringValue else { continue }
+            let effectiveName: ExpandedName
+            if id.identifier.namespaceName == name.identifier.namespaceName {
+                effectiveName = ExpandedName(namespaceName: nil, localName: id.identifier.localName)
+            } else {
+                effectiveName = id.identifier
+            }
+
+            element[attribute: effectiveName] = value
+        }
+
+        for child in (children.compactMap { $0 }) {
+            let childElement = element.addElement("")
+            child.build(element: childElement)
+        }
+    }
+
+    init(xmlElement: Node) throws(Error) {
+        fatalError("Not supported")
     }
 }

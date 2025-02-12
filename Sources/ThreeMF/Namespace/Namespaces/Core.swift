@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 internal struct Core: NamespaceSpecification {
     static let namespace = Namespace.core

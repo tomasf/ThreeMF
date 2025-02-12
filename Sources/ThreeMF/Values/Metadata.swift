@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 // metadata
 public struct Metadata {
@@ -68,10 +66,10 @@ extension Metadata: XMLElementComposable {
 
     var text: String? { value }
 
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         name = try xmlElement[Core.name]
         preserve = try? xmlElement[Core.preserve]
         type = try? xmlElement[Core.type]
-        value = xmlElement.stringValue ?? ""
+        value = xmlElement.textContent
     }
 }

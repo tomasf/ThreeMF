@@ -1,8 +1,6 @@
 import Foundation
 import Zip
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 public struct PackageReader<Target> {
     private let archive: ZipArchive<Target>
@@ -39,18 +37,18 @@ public extension PackageReader {
             throw .failedToReadArchiveFile(name: relationshipsFile, error: error)
         }
 
-        let relsDocument: XMLDocument
+        let relsDocument: Document
         do {
-            relsDocument = try XMLDocument(data: relsData)
+            relsDocument = try Document(data: relsData)
         } catch {
             throw .malformedRelationships(error)
         }
 
         let modelURI = "http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"
 
-        guard let relationships = relsDocument.rootElement(),
-              let modelRelationship = relationships.element(named: "Relationship", where: "Type", is: modelURI),
-              let target: String = try? modelRelationship["Target"],
+        guard let relationships = relsDocument.documentElement,
+              let modelRelationship = relationships[elements: "Relationship"].first(where: { $0[attribute: "Type"] == modelURI }),
+              let target: String = modelRelationship[attribute: "Target"],
               let url = URL(string: target)
         else {
             throw Error.malformedRelationships(nil)
@@ -59,20 +57,20 @@ public extension PackageReader {
         return url
     }
 
-    internal func modelRootElement() throws(Error) -> XMLElement {
+    internal func modelRootElement() throws(Error) -> Node {
         let startPart = try startPartURL()
         guard let modelData = try? readFile(at: startPart) else {
             throw .failedToReadArchiveFile(name: startPart.relativePath, error: nil)
         }
 
-        let modelDocument: XMLDocument
+        let modelDocument: Document
         do {
-            modelDocument = try XMLDocument(data: modelData)
+            modelDocument = try Document(data: modelData)
         } catch {
             throw .failedToReadArchiveFile(name: startPart.relativePath, error: error)
         }
 
-        guard let root = modelDocument.rootElement() else {
+        guard let root = modelDocument.documentElement else {
             throw .failedToReadArchiveFile(name: startPart.relativePath, error: nil)
         }
         return root

@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 // m:colorgroup
 public struct ColorGroup: Resource {    
@@ -39,7 +37,7 @@ extension ColorGroup: XMLElementComposable {
         colors
     }
 
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         id = try xmlElement[.m.id]
         displayPropertiesID = try? xmlElement[.m.displayPropertiesID]
         colors = try xmlElement[.m.color]

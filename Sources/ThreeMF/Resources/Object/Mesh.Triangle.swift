@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 public extension Mesh {
     struct Triangle: Hashable {
@@ -30,11 +28,14 @@ extension Mesh.Triangle: XMLElementComposable {
             Core.v1: v1,
             Core.v2: v2,
             Core.v3: v3,
-            Core.pid: propertyGroup
-        ] + (propertyIndex?.attributes ?? [:])
+            Core.pid: propertyGroup,
+            Core.p1: propertyIndex?.p1,
+            Core.p2: propertyIndex?.p2,
+            Core.p3: propertyIndex?.p3
+        ]
     }
 
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         v1 = try xmlElement[Core.v1]
         v2 = try xmlElement[Core.v2]
         v3 = try xmlElement[Core.v3]
@@ -59,20 +60,28 @@ public extension Mesh.Triangle {
 }
 
 internal extension Mesh.Triangle.Index {
-    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
+    var p1: String {
         switch self {
-        case .uniform (let index):
-            return [Core.p1: String(index)]
-        case .perVertex (let v1, let v2, let v3):
-            return [
-                Core.p1: String(v1),
-                Core.p2: String(v2),
-                Core.p3: String(v3)
-            ]
+        case .uniform (let index): String(index)
+        case .perVertex (let p1, _, _): String(p1)
         }
     }
 
-    init?(triangleXMLElement: XMLElement) {
+    var p2: String? {
+        switch self {
+        case .uniform: nil
+        case .perVertex (_, let p2, _): String(p2)
+        }
+    }
+
+    var p3: String? {
+        switch self {
+        case .uniform: nil
+        case .perVertex (_, _, let p3): String(p3)
+        }
+    }
+
+    init?(triangleXMLElement: Node) {
         guard let p1: ResourceIndex = try? triangleXMLElement[Core.p1] else {
             return nil
         }

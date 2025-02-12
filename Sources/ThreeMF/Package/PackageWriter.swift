@@ -1,8 +1,6 @@
 import Foundation
 import Zip
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 public class PackageWriter<Target> {
     private let archive: ZipArchive<Target>
@@ -75,17 +73,16 @@ internal extension PackageWriter {
     }
 
     func writeMainFiles() throws {
-        let root = model.xmlElement
-        let usedURIs = root.urisInTree
+        let modelDocument = Document()
+        let root = modelDocument.makeDocumentElement(name: "")
+        model.build(element: root)
 
-        for namespace in Namespace.known {
-            if usedURIs.contains(namespace.uri) {
-                root.declareNamespace(namespace.uri, prefix: namespace.standardPrefix)
-            }
+        for namespaceName in modelDocument.undeclaredNamespaceNames {
+            guard let namespace = Namespace.namespace(for: namespaceName) else { continue }
+            root.declareNamespace(namespaceName, forPrefix: namespace.standardPrefix)
         }
 
-        let modelDocument = XMLDocument(rootElement: root)
-        let modelData = modelDocument.xmlData(options: [.nodeCompactEmptyElement, .nodePrettyPrint])
+        let modelData = try modelDocument.xmlData()
 
         // Cura is sadly hard-coded to always read this file name, so keep it for compatibility
         let modelName = "3dmodel.model"
@@ -98,11 +95,8 @@ internal extension PackageWriter {
 
         try addFile(at: modelURL, contentType: MimeType.model.rawValue, relationshipType: RelationshipType.model.rawValue, data: modelData)
 
-        let contentTypesData = contentTypes.xmlDocument()
-            .xmlData(options: [.nodeCompactEmptyElement, .nodePrettyPrint])
-
-        let relationshipData = relationships.xmlDocument()
-            .xmlData(options: [.nodeCompactEmptyElement, .nodePrettyPrint])
+        let contentTypesData = try contentTypes.xmlDocument().xmlData()
+        let relationshipData = try relationships.xmlDocument().xmlData()
 
         try addFile(at: ContentTypes.archiveFileURL, data: contentTypesData)
         try addFile(at: Relationships.archiveFileURL, data: relationshipData)

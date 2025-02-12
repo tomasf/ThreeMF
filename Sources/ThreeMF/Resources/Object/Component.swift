@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 // component
 public struct Component {
@@ -24,7 +22,7 @@ extension Component: XMLElementComposable {
         ]
     }
 
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         objectID = try xmlElement[Core.objectID]
         transform = try? xmlElement[Core.transform]
     }

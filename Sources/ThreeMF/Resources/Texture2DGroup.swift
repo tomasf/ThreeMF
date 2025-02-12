@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 // m:texture2dgroup
 public struct Texture2DGroup: Resource {
@@ -33,7 +31,7 @@ extension Texture2DGroup: XMLElementComposable {
 
     var children: [(any XMLConvertible)?] { coordinates }
 
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         id = try xmlElement[.m.id]
         texture2DID = try xmlElement[.m.texID]
         displayPropertiesID = try? xmlElement[.m.displayPropertiesID]
@@ -64,7 +62,7 @@ extension Texture2DGroup.Coordinate: XMLElementComposable {
         ]
     }
 
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         u = try xmlElement[.m.u]
         v = try xmlElement[.m.v]
     }

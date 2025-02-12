@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 // m:multiproperties
 public struct Multiproperties: Resource {
@@ -55,11 +53,11 @@ extension Multiproperties: XMLElementComposable {
     }
 
     var children: [(any XMLConvertible)?] {
-        elements.map { XMLElement(.m.multi, [.m.pIndices: $0.string]).literal }
+        elements.map { LiteralElement(name: .m.multi, attributes: [.m.pIndices: $0.string]) }
 
     }
 
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         id = try xmlElement[.m.id]
         propertyGroupIDs = try xmlElement[.m.pids]
 

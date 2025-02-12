@@ -1,24 +1,9 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
-internal struct NamespacedIdentifier: Hashable {
-    let uri: String
-    let localName: String
-
-    init(uri: String, localName: String) {
-        self.uri = uri
-        self.localName = localName
-    }
-
-    init(namespace: Namespace, localName: String) {
-        self.uri = namespace.uri
-        self.localName = localName
-    }
-
+extension ExpandedName {
     var qualifiedNameWithStandardPrefix: String {
-        if let prefix = Namespace.namespace(for: uri)?.standardPrefix {
+        if let namespaceName, let prefix = Namespace.namespace(for: namespaceName)?.standardPrefix {
             return prefix + ":" + localName
         } else {
             return localName
@@ -27,14 +12,14 @@ internal struct NamespacedIdentifier: Hashable {
 }
 
 internal struct AttributeIdentifier: Hashable {
-    let identifier: NamespacedIdentifier
+    let identifier: ExpandedName
 
     var qualifiedNameWithStandardPrefix: String { identifier.qualifiedNameWithStandardPrefix }
 
     // Attributes inherit the namespace of their element if unprefixed.
     // This is contrary to XML spec, but we need to follow the 3MF standard
     func name(in elementIdentifier: ElementIdentifier) -> String {
-        if identifier.uri == elementIdentifier.identifier.uri {
+        if identifier.namespaceName == elementIdentifier.identifier.namespaceName {
             return identifier.localName
         } else {
             return qualifiedNameWithStandardPrefix
@@ -43,7 +28,7 @@ internal struct AttributeIdentifier: Hashable {
 }
 
 internal struct ElementIdentifier: Hashable {
-    let identifier: NamespacedIdentifier
+    let identifier: ExpandedName
 
     var qualifiedNameWithStandardPrefix: String { identifier.qualifiedNameWithStandardPrefix }
 }
@@ -54,17 +39,17 @@ internal protocol NamespaceSpecification {
 
 extension NamespaceSpecification {
     static func attribute(_ localName: String) -> AttributeIdentifier {
-        .init(identifier: .init(namespace: namespace, localName: localName))
+        .init(identifier: ExpandedName(namespaceName: namespace.uri, localName: localName))
     }
 
     static func element(_ localName: String) -> ElementIdentifier {
-        .init(identifier: .init(namespace: namespace, localName: localName))
+        .init(identifier: ExpandedName(namespaceName: namespace.uri, localName: localName))
     }
 }
 
 extension XMLNode {
     var identifier: ElementIdentifier {
-        .init(identifier: .init(uri: uri ?? "", localName: localName ?? ""))
+        .init(identifier: .init(namespaceName: uri ?? "", localName: localName ?? ""))
     }
 }
 

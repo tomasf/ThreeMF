@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 internal struct Relationships {
     private var relationships: [Relationship] = []
@@ -19,16 +17,18 @@ internal struct Relationships {
 }
 
 extension Relationships {
-    func xmlDocument() -> XMLDocument {
-        let rootElement = XMLElement("Relationships", children: relationships.map { relationship in
-            XMLElement("Relationship", [
-                "Target": relationship.target.relativePath,
-                "Id": relationship.id,
-                "Type": relationship.typeURI
-            ])
-        })
-        rootElement.declareNamespace("http://schemas.openxmlformats.org/package/2006/relationships")
-        return XMLDocument(rootElement: rootElement)
+    func xmlDocument() -> Document {
+        let document = Document()
+        let root = document.makeDocumentElement(name: "Relationships", defaultNamespace: "http://schemas.openxmlformats.org/package/2006/relationships")
+
+        for relationship in relationships {
+            let element = root.addElement("Relationship")
+            element[attribute: "Target"] = relationship.target.relativePath
+            element[attribute: "Id"] = relationship.id
+            element[attribute: "Type"] = relationship.typeURI
+        }
+
+        return document
     }
 }
 

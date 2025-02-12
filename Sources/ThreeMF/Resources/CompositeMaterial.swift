@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 // m:compositematerials
 public struct CompositeMaterialGroup: Resource {
@@ -33,10 +31,10 @@ extension CompositeMaterialGroup: XMLElementComposable {
     }
 
     var children: [(any XMLConvertible)?] {
-        composites.map { XMLElement(.m.composite, [.m.values: $0.string]).literal }
+        composites.map { LiteralElement(name: .m.composite, attributes: [.m.values: $0.string]) }
     }
 
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         id = try xmlElement[.m.id]
         baseMaterialGroupID = try xmlElement[.m.matID]
         baseMaterialIndices = try xmlElement[.m.matIndices]

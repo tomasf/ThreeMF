@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 // object
 public struct Object: Resource {
@@ -61,7 +59,7 @@ extension Object: XMLElementComposable {
         metadata + [content.xmlElement]
     }
 
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         id = try xmlElement[Core.id]
         type = try? xmlElement[Core.type]
         thumbnail = try? xmlElement[Core.thumbnail]
@@ -95,13 +93,13 @@ public extension Object {
 }
 
 internal extension Object.Content {
-    init(objectXMLElement: XMLElement) throws(Error) {
+    init(objectXMLElement: Node) throws(Error) {
         if let mesh: Mesh = try? objectXMLElement[Core.mesh] {
             self = .mesh(mesh)
-        } else if let componentsElement: XMLElement = try? objectXMLElement[Core.components] {
+        } else if let componentsElement: Node = try? objectXMLElement[Core.components] {
             self = .components(try componentsElement[Core.component])
         } else {
-            throw .missingElement(name: "mesh OR components")
+            throw .missingObjectContent
         }
     }
 

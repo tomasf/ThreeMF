@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 internal struct TriangleSets: NamespaceSpecification {
     static let namespace = Namespace.triangleSets

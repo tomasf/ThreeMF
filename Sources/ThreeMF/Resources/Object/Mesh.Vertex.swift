@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 public extension Mesh {
     struct Vertex: Hashable {
@@ -24,7 +22,7 @@ extension Mesh.Vertex: XMLElementComposable {
         [Core.x: x, Core.y: y, Core.z: z]
     }
 
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         x = try xmlElement[Core.x]
         y = try xmlElement[Core.y]
         z = try xmlElement[Core.z]

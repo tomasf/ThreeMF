@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 // m:pbspeculartexturedisplayproperties
 public struct SpecularTextureDisplayProperties: Resource, XMLElementComposable {
@@ -45,7 +43,7 @@ internal extension SpecularTextureDisplayProperties {
         ]
     }
 
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         id = try xmlElement[.m.id]
         name = try xmlElement[.m.name]
         specularTextureID = try xmlElement[.m.specularTextureID]

@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 internal protocol XMLStringConvertible {
     var xmlStringValue: String { get }

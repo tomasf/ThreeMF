@@ -1,7 +1,5 @@
 import Foundation
-#if canImport(FoundationXML)
-import FoundationXML
-#endif
+import Nodal
 
 // m:texture2d
 public struct Texture2D: Resource {
@@ -71,7 +69,7 @@ extension Texture2D: XMLElementComposable {
         ]
     }
 
-    init(xmlElement: XMLElement) throws(Error) {
+    init(xmlElement: Node) throws(Error) {
         id = try xmlElement[.m.id]
         pathURL = try xmlElement[.m.path]
         contentType = try xmlElement[.m.contentType]
