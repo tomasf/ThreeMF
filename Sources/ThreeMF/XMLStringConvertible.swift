@@ -5,7 +5,7 @@ internal protocol XMLStringConvertible {
     var xmlStringValue: String { get }
     init (xmlString: String) throws(Error)
 }
-
+/*
 extension RawRepresentable<String> {
     var xmlStringValue: String { rawValue }
 
@@ -16,7 +16,7 @@ extension RawRepresentable<String> {
         self = element
     }
 }
-
+*/
 extension Sequence where Element: XMLStringConvertible {
     var string: String {
         map { $0.xmlStringValue }.joined(separator: " ")
@@ -54,18 +54,6 @@ extension String: XMLStringConvertible {
     init(xmlString: String) throws(Error) { self = xmlString }
 }
 
-extension URL: XMLStringConvertible {
-    var xmlStringValue: String {
-        relativePath
-    }
-
-    init(xmlString: String) throws(Error) {
-        guard let url = URL(string: xmlString) else {
-            throw .malformedAttributeValue(xmlString)
-        }
-        self = url
-    }
-}
 
 extension Bool: XMLStringConvertible {
     var xmlStringValue: String {

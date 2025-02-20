@@ -1,8 +1,9 @@
 import Foundation
 import Nodal
 
-public protocol Resource {
+public protocol Resource: XMLElementCodable {
     var id: ResourceID { get set }
+    static var elementName: ExpandedName { get }
 }
 
 public struct PropertyReference: Hashable {
@@ -15,7 +16,7 @@ public struct PropertyReference: Hashable {
     }
 }
 
-internal typealias ResourceInternal = (Resource & XMLElementComposable)
+internal typealias ResourceInternal = (Resource & XMLElementCodable)
 
 internal let allResourceTypes: [any ResourceInternal.Type] = [
     Object.self, ColorGroup.self, BaseMaterialGroup.self,
@@ -25,6 +26,6 @@ internal let allResourceTypes: [any ResourceInternal.Type] = [
     SpecularTextureDisplayProperties.self, MetallicTextureDisplayProperties.self,
 ]
 
-internal let resourceTypePerElementIdentifier: [ElementIdentifier: any ResourceInternal.Type] = {
-    Dictionary(uniqueKeysWithValues: allResourceTypes.map { ($0.elementIdentifier, $0) })
+internal let resourceTypePerElementIdentifier: [ExpandedName: any ResourceInternal.Type] = {
+    Dictionary(uniqueKeysWithValues: allResourceTypes.map { ($0.elementName, $0) })
 }()

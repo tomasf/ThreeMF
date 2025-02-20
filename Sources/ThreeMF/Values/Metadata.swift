@@ -2,11 +2,12 @@ import Foundation
 import Nodal
 
 // metadata
+@XMLCodable
 public struct Metadata {
-    public let name: Name
-    public let value: String
-    public let preserve: Bool?
-    public let type: String?
+    @Attribute(.name) public let name: Name
+    @TextContent public let value: String
+    @Attribute(.preserve) public let preserve: Bool?
+    @Attribute(.type) public let type: String?
 
     public init(name: Name, value: String, preserve: Bool = false, type: String? = nil) {
         self.name = name
@@ -15,7 +16,7 @@ public struct Metadata {
         self.type = type
     }
 
-    public enum Name: Hashable, XMLStringConvertible {
+    public enum Name: Hashable, XMLValueCodable {
         case title
         case designer
         case description
@@ -27,7 +28,7 @@ public struct Metadata {
         case application
         case custom (String)
 
-        var xmlStringValue: String {
+        public var xmlStringValue: String {
             switch self {
             case .title: "Title"
             case .designer: "Designer"
@@ -42,34 +43,13 @@ public struct Metadata {
             }
         }
 
-        init(xmlString: String) {
+        public init(xmlStringValue string: String) {
             let wellknown: [Self] = [.title, .designer, .description, .copyright, .licenseTerms, .rating, .creationDate, .modificationDate, .application]
-            if let match = wellknown.first(where: { $0.xmlStringValue == xmlString }) {
+            if let match = wellknown.first(where: { $0.xmlStringValue == string }) {
                 self = match
             } else {
-                self = .custom(xmlString)
+                self = .custom(string)
             }
         }
-    }
-}
-
-extension Metadata: XMLElementComposable {
-    static let elementIdentifier = Core.metadata
-
-    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
-        [
-            Core.name: name,
-            Core.preserve: preserve,
-            Core.type: type
-        ]
-    }
-
-    var text: String? { value }
-
-    init(xmlElement: Node) throws(Error) {
-        name = try xmlElement[Core.name]
-        preserve = try? xmlElement[Core.preserve]
-        type = try? xmlElement[Core.type]
-        value = xmlElement.textContent
     }
 }

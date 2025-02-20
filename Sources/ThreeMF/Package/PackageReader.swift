@@ -76,8 +76,8 @@ public extension PackageReader {
         return root
     }
 
-    func model() throws(Error) -> Model {
-        return try Model(xmlElement: modelRootElement())
+    func model() throws -> Model {
+        return try Model(from: modelRootElement())
     }
 
     func readFile(at url: URL) throws -> Data? {

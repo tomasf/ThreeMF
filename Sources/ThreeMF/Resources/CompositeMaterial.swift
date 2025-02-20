@@ -2,7 +2,9 @@ import Foundation
 import Nodal
 
 // m:compositematerials
-public struct CompositeMaterialGroup: Resource {
+public struct CompositeMaterialGroup: Resource, XMLElementCodable {
+    static public let elementName: ExpandedName = Materials.compositeMaterials
+
     public var id: ResourceID
     public var baseMaterialGroupID: ResourceID // matid
     public var baseMaterialIndices: ResourceIndices  // Indices inside the material group
@@ -16,29 +18,25 @@ public struct CompositeMaterialGroup: Resource {
         self.displayPropertiesID = displayPropertiesID
         self.composites = composites
     }
-}
 
-extension CompositeMaterialGroup: XMLElementComposable {
-    static let elementIdentifier = Materials.compositeMaterials
+    public func encode(to element: Node) {
+        element.setValue(id, forAttribute: .id)
+        element.setValue(baseMaterialGroupID, forAttribute: .matID)
+        element.setValue(baseMaterialIndices, forAttribute: .matIndices)
+        element.setValue(displayPropertiesID, forAttribute: .displayPropertiesID)
 
-    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
-        [
-            .m.id: id,
-            .m.matID: baseMaterialGroupID,
-            .m.matIndices: baseMaterialIndices.string,
-            .m.displayPropertiesID: displayPropertiesID
-        ]
+        for composite in composites {
+            let child = element.addElement(Materials.composite)
+            child.setValue(composite, forAttribute: .values)
+        }
     }
 
-    var children: [(any XMLConvertible)?] {
-        composites.map { LiteralElement(name: .m.composite, attributes: [.m.values: $0.string]) }
-    }
+    public init(from element: Node) throws {
+        id = try element.value(forAttribute: .id)
+        baseMaterialGroupID = try element.value(forAttribute: .matID)
+        baseMaterialIndices = try element.value(forAttribute: .matIndices)
+        displayPropertiesID = try element.value(forAttribute: .displayPropertiesID)
 
-    init(xmlElement: Node) throws(Error) {
-        id = try xmlElement[.m.id]
-        baseMaterialGroupID = try xmlElement[.m.matID]
-        baseMaterialIndices = try xmlElement[.m.matIndices]
-        displayPropertiesID = try? xmlElement[.m.displayPropertiesID]
-        composites = try xmlElement[.m.composite].map { n throws(Error) in try n[.m.values] }
+        composites = try element[elements: Materials.composite].map { try $0.value(forAttribute: .values) }
     }
 }

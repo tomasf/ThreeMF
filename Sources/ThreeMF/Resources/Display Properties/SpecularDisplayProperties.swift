@@ -2,11 +2,12 @@ import Foundation
 import Nodal
 
 // m:pbspeculardisplayproperties
+@XMLCodable
 public struct SpecularDisplayProperties: Resource {
-    static let elementIdentifier = Materials.specularDisplayProperties
+    static public let elementName: ExpandedName = Materials.specularDisplayProperties
 
-    public var id: ResourceID
-    public var speculars: [Specular]
+    @Attribute(.id) public var id: ResourceID
+    @Element(Materials.specular) public var speculars: [Specular]
 
     public init(id: ResourceID, speculars: [Specular] = []) {
         self.id = id
@@ -22,26 +23,12 @@ public extension SpecularDisplayProperties {
     }
 }
 
-extension SpecularDisplayProperties: XMLElementComposable {
-    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
-        [.m.id: id]
-    }
-
-    var children: [(any XMLConvertible)?] {
-        speculars
-    }
-    
-    init(xmlElement: Node) throws(Error) {
-        id = try xmlElement[.m.id]
-        speculars = try xmlElement[.m.specular]
-    }
-}
-
 // m:pbspecular
+@XMLCodable
 public struct Specular: Hashable {
-    public var name: String
-    public var specularColor: Color?
-    public var glossiness: Double?
+    @Attribute(.name) public var name: String
+    @Attribute(.specularColor) public var specularColor: Color?
+    @Attribute(.glossiness) public var glossiness: Double?
 
     public init(name: String, specularColor: Color? = nil, glossiness: Double? = nil) {
         self.name = name
@@ -53,23 +40,5 @@ public struct Specular: Hashable {
 public extension Specular {
     var effectiveValues: (specularColor: Color, glossiness: Double) {
         (specularColor ?? .init(red: 0x38, green: 0x38, blue: 0x38), glossiness ?? 0)
-    }
-}
-
-extension Specular: XMLElementComposable {
-    static let elementIdentifier = Materials.specular
-
-    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
-        [
-            .m.name: name,
-            .m.specularColor: specularColor,
-            .m.glossiness: glossiness
-        ]
-    }
-    
-    init(xmlElement: Node) throws(Error) {
-        name = try xmlElement[.m.name]
-        specularColor = try? xmlElement[.m.specularColor]
-        glossiness = try? xmlElement[.m.glossiness]
     }
 }

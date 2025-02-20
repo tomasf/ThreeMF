@@ -4,43 +4,43 @@ import Nodal
 // t:triangleset
 public extension Mesh {
     struct TriangleSet {
+        let elementName: ExpandedName = TriangleSets.triangleSet
+
         public var name: String
         public var identifier: String
         public var triangleIndices: IndexSet
     }
 }
 
-extension Mesh.TriangleSet: XMLElementComposable {
-    static let elementIdentifier = TriangleSets.triangleSet
+extension Mesh.TriangleSet: XMLElementCodable {
+    public func encode(to xmlElement: Node) {
+        xmlElement.setValue(name, forAttribute: .name)
+        xmlElement.setValue(identifier, forAttribute: .identifier)
 
-    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
-        [
-            .t.name: name,
-            .t.identifier: identifier
-        ]
-    }
-
-    var children: [(any XMLConvertible)?] {
-        triangleIndices.rangeView.map {
-            if $0.count == 1 {
-                LiteralElement(name: .t.ref, attributes: [.t.index: $0.lowerBound])
+        for range in triangleIndices.rangeView {
+            let rangeElement = xmlElement.addElement("")
+            if range.count == 1 {
+                rangeElement.expandedName = TriangleSets.ref
+                rangeElement.setValue(range.lowerBound, forAttribute: .index)
             } else {
-                LiteralElement(name: .t.refRange, attributes: [.t.startIndex: $0.lowerBound, .t.endIndex: $0.upperBound])
+                rangeElement.expandedName = TriangleSets.refRange
+                rangeElement.setValue(range.lowerBound, forAttribute: .startIndex)
+                rangeElement.setValue(range.upperBound, forAttribute: .endIndex)
             }
         }
     }
 
-    init(xmlElement: Node) throws(Error) {
-        name = try xmlElement[.t.name]
-        identifier = try xmlElement[.t.identifier]
+    public init(from xmlElement: Node) throws {
+        name = try xmlElement.value(forAttribute: .name)
+        identifier = try xmlElement.value(forAttribute: .identifier)
 
         triangleIndices = []
 
-        for element in xmlElement[.t.ref] {
-            triangleIndices.insert(try element[.t.index])
+        for element in xmlElement[elements: TriangleSets.ref] {
+            triangleIndices.insert(try element.value(forAttribute: .index))
         }
-        for element in xmlElement[.t.refRange] {
-            let range = try (element[.t.startIndex] as Int)..<(element[.t.endIndex] as Int)
+        for element in xmlElement[elements: TriangleSets.refRange] {
+            let range = try (element.value(forAttribute: .startIndex) as Int)..<(element.value(forAttribute: .endIndex) as Int)
             triangleIndices.insert(integersIn: range)
         }
     }

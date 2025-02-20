@@ -2,7 +2,7 @@ import Foundation
 import Nodal
 
 // ST_Matrix3D
-public struct Matrix3D: XMLStringConvertible {
+public struct Matrix3D: XMLValueCodable {
     public let values: [[Double]]
 
     public init(values: [[Double]]) {
@@ -12,13 +12,13 @@ public struct Matrix3D: XMLStringConvertible {
         self.values = values
     }
 
-    init(xmlString: String) throws(Error) {
-        let flatValues = xmlString.split(separator: " ").compactMap(Double.init)
-        guard flatValues.count == 12 else { throw .malformedTransform(xmlString) }
+    public init(xmlStringValue string: String) throws {
+        let flatValues = string.split(separator: " ").compactMap(Double.init)
+        guard flatValues.count == 12 else { throw XMLValueError.invalidFormat(expected: "Transform (12 doubles)", found: string) }
         values = (0..<4).map { Array(flatValues[($0 * 3)..<(($0 + 1) * 3)]) }
     }
 
-    var xmlStringValue: String {
+    public var xmlStringValue: String {
         values.map { String(format: "%g %g %g", $0[0], $0[1], $0[2]) }.joined(separator: " ")
     }
 }

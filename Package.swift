@@ -4,6 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "ThreeMF",
+    platforms: [.macOS(.v10_15)],
     products: [
         .library(name: "ThreeMF", targets: ["ThreeMF"])
     ],

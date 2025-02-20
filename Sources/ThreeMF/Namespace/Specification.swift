@@ -38,12 +38,12 @@ internal protocol NamespaceSpecification {
 }
 
 extension NamespaceSpecification {
-    static func attribute(_ localName: String) -> AttributeIdentifier {
-        .init(identifier: ExpandedName(namespaceName: namespace.uri, localName: localName))
+    static func attribute(_ localName: String) -> ExpandedName {
+        ExpandedName(namespaceName: namespace.uri, localName: localName)
     }
 
-    static func element(_ localName: String) -> ElementIdentifier {
-        .init(identifier: ExpandedName(namespaceName: namespace.uri, localName: localName))
+    static func element(_ localName: String) -> ExpandedName {
+        ExpandedName(namespaceName: namespace.uri, localName: localName)
     }
 }
 

@@ -16,16 +16,13 @@ struct Tests {
             let xmlInput = try package.modelRootElement()
             let model = try package.model()
 
-            let document = Document()
-            let root = document.makeRootElement(name: "")
-            model.build(element: root)
-
-            xmlInput.expectEquivalence(with: root)
-
             let writer = PackageWriter()
             writer.model = model
-            let outData = try writer.finalize()
+            let document = writer.xmlDocument()
 
+            xmlInput.expectEquivalence(with: document.documentElement!)
+
+            let outData = try writer.finalize()
             print("Read: \(inData.count) bytes. Written: \(outData.count) bytes.")
         }
     }
@@ -50,43 +47,51 @@ extension URL {
     }
 }
 
-extension XMLNode {
-    static let numericalAttributes = Set(["x", "y", "z", "transform"])
-    var attributeValue: String {
-        let string = stringValue ?? ""
-        if Self.numericalAttributes.contains(localName ?? "") {
-            return string.split(separator: " ").map {
-                String(format: "%g", Double($0) ?? 0)
-            }.joined(separator: " ")
-        } else {
-            return string
-        }
+extension String {
+    var canonicalNumerical: String {
+        return split(separator: " ").map {
+            String(format: "%g", Double($0) ?? 0)
+        }.joined(separator: " ")
     }
 }
 
 extension Node {
-    var canonicalElements: [ExpandedName: [Element]] {
+    var canonicalElements: [ExpandedName: [Node]] {
         elements.reduce(into: [:]) { result, element in
             result[element.expandedName, default: []].append(element)
         }
     }
 
+    var canonicalAttributes: [[String]] {
+        let numericalAttributes = Set(["x", "y", "z", "transform"])
+
+        return attributes.sorted(by: { $0.name < $1.name }).map { name, value in
+            if numericalAttributes.contains(name) {
+                return [name, value.canonicalNumerical]
+            } else {
+                return [name, value.lowercased()]
+            }
+        }
+    }
+
     func expectEquivalence(with other: Node) {
-        #expect(attributes == other.attributes, "Attributes differ: \(path ?? "")")
-        guard attributes == other.attributes else { return }
-        #expect(concatenatedText == other.concatenatedText, "Element text differs: \(path ?? "")")
-        guard concatenatedText == other.concatenatedText else { return }
+        #expect(canonicalAttributes == other.canonicalAttributes, "Attributes differ: \(xPath ?? "")")
+        guard canonicalAttributes == other.canonicalAttributes else { return }
+        #expect(textContent == other.textContent, "Element text differs: \(xPath ?? "")")
+        guard textContent == other.textContent else {
+            return
+        }
 
         let elements1 = canonicalElements
         let elements2 = other.canonicalElements
         let allIdentities = Set(elements1.keys).union(elements2.keys)
-        #expect(elements1.count == elements2.count, "Number of element types differs in \(path). \(elements1.keys) vs. \(elements2.keys)")
+        #expect(elements1.count == elements2.count, "Number of element types differs in \(xPath). \(elements1.keys) vs. \(elements2.keys)")
         guard elements1.count == elements2.count else { return }
 
         for identity in allIdentities {
             let elements = elements1[identity] ?? []
             let otherElements = elements2[identity] ?? []
-            #expect(elements.count == otherElements.count, "Number of elements of type \(identity) differs: \(path ?? "")")
+            #expect(elements.count == otherElements.count, "Number of elements of type \(identity) differs: \(xPath ?? "")")
 
             guard elements.count == otherElements.count else { return }
             for (index, element) in elements.enumerated() {

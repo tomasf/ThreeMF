@@ -2,13 +2,13 @@ import Foundation
 import Nodal
 
 public extension Mesh {
-    struct Triangle: Hashable {
-        public let v1: ResourceIndex
-        public let v2: ResourceIndex
-        public let v3: ResourceIndex
+    struct Triangle: Hashable, XMLElementCodable {
+        @Attribute(.v1) public let v1: ResourceIndex
+        @Attribute(.v2) public let v2: ResourceIndex
+        @Attribute(.v3) public let v3: ResourceIndex
 
-        public let propertyIndex: Index?
-        public let propertyGroup: ResourceID?
+        @Attribute(.pid) public let propertyIndex: Index?
+        @Attribute(.pid) public let propertyGroup: ResourceID?
 
         public init(v1: ResourceIndex, v2: ResourceIndex, v3: ResourceIndex, propertyIndex: Index?, propertyGroup: ResourceID? = nil) {
             self.v1 = v1
@@ -17,33 +17,24 @@ public extension Mesh {
             self.propertyIndex = propertyIndex
             self.propertyGroup = propertyGroup
         }
+
+        public func encode(to element: Node) {
+            element.setValue(v1, forAttribute: .v1)
+            element.setValue(v2, forAttribute: .v2)
+            element.setValue(v3, forAttribute: .v3)
+            propertyIndex?.encode(to: element)
+            element.setValue(propertyGroup, forAttribute: .pid)
+        }
+
+        public init(from element: Node) throws {
+            v1 = try element.value(forAttribute: .v1)
+            v2 = try element.value(forAttribute: .v2)
+            v3 = try element.value(forAttribute: .v3)
+            propertyIndex = .init(from: element)
+            propertyGroup = try element.value(forAttribute: .pid)
+        }
     }
 }
-
-extension Mesh.Triangle: XMLElementComposable {
-    static let elementIdentifier = Core.triangle
-
-    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
-        [
-            Core.v1: v1,
-            Core.v2: v2,
-            Core.v3: v3,
-            Core.pid: propertyGroup,
-            Core.p1: propertyIndex?.p1,
-            Core.p2: propertyIndex?.p2,
-            Core.p3: propertyIndex?.p3
-        ]
-    }
-
-    init(xmlElement: Node) throws(Error) {
-        v1 = try xmlElement[Core.v1]
-        v2 = try xmlElement[Core.v2]
-        v3 = try xmlElement[Core.v3]
-        propertyGroup = try? xmlElement[Core.pid]
-        propertyIndex = Index(triangleXMLElement: xmlElement)
-    }
-}
-
 
 public extension Mesh.Triangle {
     enum Index: Hashable {
@@ -80,17 +71,31 @@ internal extension Mesh.Triangle.Index {
         case .perVertex (_, _, let p3): String(p3)
         }
     }
+}
 
-    init?(triangleXMLElement: Node) {
-        guard let p1: ResourceIndex = try? triangleXMLElement[Core.p1] else {
+extension Mesh.Triangle.Index {
+    public init?(from element: Node) {
+        guard let p1: ResourceIndex = try? element.value(forAttribute: .p1) else {
             return nil
         }
 
-        if let p2: ResourceIndex = try? triangleXMLElement[Core.p2],
-           let p3: ResourceIndex = try? triangleXMLElement[Core.p3] {
+        if let p2: ResourceIndex = try? element.value(forAttribute: .p1),
+           let p3: ResourceIndex = try? element.value(forAttribute: .p2) {
             self = .perVertex(p1, p2, p3)
         } else {
             self = .uniform(p1)
+        }
+    }
+
+    public func encode(to element: Node) {
+        switch self {
+        case .uniform (let index):
+            element.setValue(index, forAttribute: .p1)
+
+        case .perVertex (let p1, let p2, let p3):
+            element.setValue(p1, forAttribute: .p1)
+            element.setValue(p2, forAttribute: .p2)
+            element.setValue(p3, forAttribute: .p3)
         }
     }
 }

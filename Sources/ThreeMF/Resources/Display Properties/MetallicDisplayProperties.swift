@@ -2,11 +2,12 @@ import Foundation
 import Nodal
 
 // m:pbmetallicdisplayproperties
-public struct MetallicDisplayProperties: Resource, XMLElementComposable {
-    static let elementIdentifier = Materials.metallicDisplayProperties
+@XMLCodable
+public struct MetallicDisplayProperties: Resource {
+    static public let elementName: ExpandedName = Materials.metallicDisplayProperties
 
-    public var id: ResourceID
-    public var metallics: [Metallic]
+    @Attribute(.id) public var id: ResourceID
+    @Element(Materials.metallic) public var metallics: [Metallic]
 
     public init(id: ResourceID, metallics: [Metallic] = []) {
         self.id = id
@@ -22,48 +23,16 @@ public extension MetallicDisplayProperties {
     }
 }
 
-internal extension MetallicDisplayProperties {
-    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
-        [.m.id: id]
-    }
-
-    var children: [(any XMLConvertible)?] {
-        metallics
-    }
-
-    init(xmlElement: Node) throws(Error) {
-        id = try xmlElement[.m.id]
-        metallics = try xmlElement[.m.metallic]
-    }
-}
-
 // m:pbmetallic
+@XMLCodable
 public struct Metallic: Hashable {
-    public var name: String
-    public var metallicness: Double
-    public var roughness: Double
+    @Attribute(.name) public var name: String
+    @Attribute(.metallicness) public var metallicness: Double
+    @Attribute(.roughness) public var roughness: Double
 
     public init(name: String, metallicness: Double, roughness: Double) {
         self.name = name
         self.metallicness = metallicness
         self.roughness = roughness
-    }
-}
-
-extension Metallic: XMLElementComposable {
-    static let elementIdentifier = Materials.metallic
-
-    var attributes: [AttributeIdentifier : (any XMLStringConvertible)?] {
-        [
-            .m.name: name,
-            .m.metallicness: metallicness,
-            .m.roughness: roughness
-        ]
-    }
-
-    init(xmlElement: Node) throws(Error) {
-        name = try xmlElement[.m.name]
-        metallicness = try xmlElement[.m.metallicness]
-        roughness = try xmlElement[.m.roughness]
     }
 }

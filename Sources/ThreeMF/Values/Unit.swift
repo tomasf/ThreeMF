@@ -1,7 +1,7 @@
 import Foundation
 import Nodal
 
-public enum Unit: String, Sendable, XMLStringConvertible {
+public enum Unit: String, Sendable, XMLValueCodable {
     case micron
     case millimeter
     case centimeter

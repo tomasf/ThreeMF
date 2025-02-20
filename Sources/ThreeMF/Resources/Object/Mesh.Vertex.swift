@@ -2,10 +2,11 @@ import Foundation
 import Nodal
 
 public extension Mesh {
+    @XMLCodable
     struct Vertex: Hashable {
-        public let x: Double
-        public let y: Double
-        public let z: Double
+        @Attribute(.x) public let x: Double
+        @Attribute(.y) public let y: Double
+        @Attribute(.z) public let z: Double
 
         public init(x: Double, y: Double, z: Double) {
             self.x = x
@@ -15,16 +16,6 @@ public extension Mesh {
     }
 }
 
-extension Mesh.Vertex: XMLElementComposable {
-    static let elementIdentifier = Core.vertex
-
-    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
-        [Core.x: x, Core.y: y, Core.z: z]
-    }
-
-    init(xmlElement: Node) throws(Error) {
-        x = try xmlElement[Core.x]
-        y = try xmlElement[Core.y]
-        z = try xmlElement[Core.z]
-    }
+public extension Mesh.Vertex {
+    var elementName: ExpandedName { Core.vertex }
 }

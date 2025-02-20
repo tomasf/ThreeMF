@@ -2,44 +2,35 @@ import Foundation
 import Nodal
 
 // m:colorgroup
+@XMLCodable
 public struct ColorGroup: Resource {    
-    public var id: ResourceID
-    public var displayPropertiesID: ResourceID?
-    public var colors: [Color]
+    static public let elementName: ExpandedName = Materials.colorGroup
+
+    @Attribute(.id) public var id: ResourceID
+    @Attribute(.displayPropertiesID) public var displayPropertiesID: ResourceID?
+    @Element(Materials.color) public var colors: [ColorItem]
 
     public init(id: ResourceID, displayPropertiesID: ResourceID? = nil, colors: [Color] = []) {
         self.id = id
         self.displayPropertiesID = displayPropertiesID
-        self.colors = colors
+        self.colors = colors.map { ColorItem(color: $0) }
     }
 }
 
 public extension ColorGroup {
     @discardableResult
     mutating func addColor(_ color: Color) -> ResourceIndex {
-        colors.append(color)
+        colors.append(ColorItem(color: color))
         return colors.endIndex - 1
     }
 }
 
-extension ColorGroup: XMLElementComposable {
-    static let elementIdentifier = Materials.colorGroup
+// m:color
+@XMLCodable
+public struct ColorItem {
+    @Attribute(.color) var color: Color
 
-    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
-        let attrs: [AttributeIdentifier: (any XMLStringConvertible)?] = [
-            .m.id: id,
-            .m.displayPropertiesID: displayPropertiesID
-        ]
-        return attrs
-    }
-
-    var children: [(any XMLConvertible)?] {
-        colors
-    }
-
-    init(xmlElement: Node) throws(Error) {
-        id = try xmlElement[.m.id]
-        displayPropertiesID = try? xmlElement[.m.displayPropertiesID]
-        colors = try xmlElement[.m.color]
+    init(color: Color) {
+        self.color = color
     }
 }

@@ -79,9 +79,3 @@ extension Node {
         }
     }
 }
-
-extension Node {
-    var identifier: ElementIdentifier {
-        .init(identifier: expandedName)
-    }
-}

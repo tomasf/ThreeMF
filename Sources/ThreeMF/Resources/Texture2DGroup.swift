@@ -2,13 +2,14 @@ import Foundation
 import Nodal
 
 // m:texture2dgroup
+@XMLCodable
 public struct Texture2DGroup: Resource {
-    static let elementName = "m:texture2dgroup"
+    static public let elementName: ExpandedName = Materials.texture2DGroup
 
-    public var id: ResourceID
-    public var texture2DID: ResourceID // "texid", points to a <texture2d>
-    public var displayPropertiesID: ResourceID?  // Points to a <displayproperties>
-    public var coordinates: [Coordinate]
+    @Attribute(.id) public var id: ResourceID
+    @Attribute(.texID) public var texture2DID: ResourceID // "texid", points to a <texture2d>
+    @Attribute(.displayPropertiesID) public var displayPropertiesID: ResourceID?  // Points to a <displayproperties>
+    @Element(Materials.tex2Coord) public var coordinates: [Coordinate]
 
     public init(id: ResourceID, texture2DID: ResourceID, displayPropertiesID: ResourceID? = nil, coordinates: [Coordinate]) {
         self.id = id
@@ -18,32 +19,12 @@ public struct Texture2DGroup: Resource {
     }
 }
 
-extension Texture2DGroup: XMLElementComposable {
-    static let elementIdentifier = Materials.texture2DGroup
-
-    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
-        [
-            .m.id: id,
-            .m.texID: texture2DID,
-            .m.displayPropertiesID: displayPropertiesID
-        ]
-    }
-
-    var children: [(any XMLConvertible)?] { coordinates }
-
-    init(xmlElement: Node) throws(Error) {
-        id = try xmlElement[.m.id]
-        texture2DID = try xmlElement[.m.texID]
-        displayPropertiesID = try? xmlElement[.m.displayPropertiesID]
-        coordinates = try xmlElement[.m.tex2Coord]
-    }
-}
-
 public extension Texture2DGroup {
     // m:tex2coord
+    @XMLCodable
     struct Coordinate {
-        public let u: Double
-        public let v: Double
+        @Attribute(.u) public let u: Double
+        @Attribute(.v) public let v: Double
 
         init(u: Double, v: Double) {
             self.u = u
@@ -51,20 +32,3 @@ public extension Texture2DGroup {
         }
     }
 }
-
-extension Texture2DGroup.Coordinate: XMLElementComposable {
-    static let elementIdentifier = Materials.tex2Coord
-
-    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
-        [
-            .m.u: u,
-            .m.v: v
-        ]
-    }
-
-    init(xmlElement: Node) throws(Error) {
-        u = try xmlElement[.m.u]
-        v = try xmlElement[.m.v]
-    }
-}
-

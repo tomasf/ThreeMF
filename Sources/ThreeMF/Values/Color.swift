@@ -1,7 +1,6 @@
 import Foundation
 import Nodal
 
-// CT_Color and m:color
 public struct Color: Hashable {
     public typealias Component = UInt8
     public let red: Component
@@ -23,16 +22,16 @@ public extension Color {
     static var white: Color { .init(red: 0xFF, green: 0xFF, blue: 0xFF) }
 }
 
-extension Color: XMLStringConvertible {
-    internal init(xmlString hexString: String) throws(Error) {
+extension Color: XMLValueCodable {
+    public init(xmlStringValue hexString: String) throws {
         guard hexString.hasPrefix("#") else {
-            throw .malformedColorString(hexString)
+            throw XMLValueError.invalidFormat(expected: "Color", found: hexString)
         }
         var string = hexString
         string.removeFirst()
 
         guard var number = Int(string, radix: 16) else {
-            throw .malformedColorString(hexString)
+            throw XMLValueError.invalidFormat(expected: "Color", found: hexString)
         }
 
         if string.count == 8 {
@@ -41,7 +40,7 @@ extension Color: XMLStringConvertible {
         } else if string.count == 6 {
             alpha = 0xFF
         } else {
-            throw .malformedColorString(hexString)
+            throw XMLValueError.invalidFormat(expected: "Color", found: hexString)
         }
 
         red = UInt8(number >> 16 & 0xFF)
@@ -49,19 +48,11 @@ extension Color: XMLStringConvertible {
         blue = UInt8(number >> 0 & 0xFF)
     }
 
-    var xmlStringValue: String {
-        String(format: "#%02x%02x%02x%02x", red, green, blue, alpha)
-    }
-}
-
-extension Color: XMLElementComposable {
-    static let elementIdentifier = Materials.color
-
-    var attributes: [AttributeIdentifier: (any XMLStringConvertible)?] {
-        [.m.colorAttribute: self]
-    }
-
-    init(xmlElement: Node) throws(Error) {
-        self = try xmlElement[.m.colorAttribute]
+    public var xmlStringValue: String {
+        if alpha == 0xFF {
+            String(format: "#%02x%02x%02x", red, green, blue)
+        } else {
+            String(format: "#%02x%02x%02x%02x", red, green, blue, alpha)
+        }
     }
 }

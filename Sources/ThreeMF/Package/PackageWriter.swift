@@ -72,14 +72,29 @@ internal extension PackageWriter {
         return try archive.addFile(at: filePath, data: data)
     }
 
-    func writeMainFiles() throws {
-        let modelDocument = Document()
-        let root = modelDocument.makeDocumentElement(name: "")
-        model.build(element: root)
+    func xmlDocument() -> Document {
+        let modelDocument = Document(model, elementName: Core.model)
 
         for namespaceName in modelDocument.undeclaredNamespaceNames {
-            guard let namespace = Namespace.namespace(for: namespaceName) else { continue }
-            root.declareNamespace(namespaceName, forPrefix: namespace.standardPrefix)
+            guard let namespace = Namespace.namespace(for: namespaceName) else {
+                assertionFailure("Unknown namespace \(namespaceName)")
+                continue
+            }
+            modelDocument.documentElement?.declareNamespace(namespaceName, forPrefix: namespace.standardPrefix)
+        }
+
+        return modelDocument
+    }
+
+    func writeMainFiles() throws {
+        let modelDocument = xmlDocument()
+
+        for namespaceName in modelDocument.undeclaredNamespaceNames {
+            guard let namespace = Namespace.namespace(for: namespaceName) else {
+                assertionFailure("Unknown namespace \(namespaceName)")
+                continue
+            }
+            modelDocument.documentElement?.declareNamespace(namespaceName, forPrefix: namespace.standardPrefix)
         }
 
         let modelData = try modelDocument.xmlData()
