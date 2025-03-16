@@ -2,16 +2,25 @@ import Foundation
 import Nodal
 
 // m:pbspeculardisplayproperties
-@XMLCodable
-public struct SpecularDisplayProperties: Resource {
+public struct SpecularDisplayProperties: Resource, XMLElementCodable {
     static public let elementName: ExpandedName = Materials.specularDisplayProperties
 
-    @Attribute(.id) public var id: ResourceID
-    @Element(Materials.specular) public var speculars: [Specular]
+    public var id: ResourceID
+    public var speculars: [Specular]
 
     public init(id: ResourceID, speculars: [Specular] = []) {
         self.id = id
         self.speculars = speculars
+    }
+
+    public func encode(to element: Node) {
+        element.setValue(id, forAttribute: .id)
+        element.encode(speculars, elementName: Materials.specular)
+    }
+
+    public init(from element: Node) throws {
+        id = try element.value(forAttribute: .id)
+        speculars = try element.decode(elementName: Materials.specular)
     }
 }
 
@@ -24,16 +33,27 @@ public extension SpecularDisplayProperties {
 }
 
 // m:pbspecular
-@XMLCodable
-public struct Specular: Hashable {
-    @Attribute(.name) public var name: String
-    @Attribute(.specularColor) public var specularColor: Color?
-    @Attribute(.glossiness) public var glossiness: Double?
+public struct Specular: Hashable, XMLElementCodable {
+    public var name: String
+    public var specularColor: Color?
+    public var glossiness: Double?
 
     public init(name: String, specularColor: Color? = nil, glossiness: Double? = nil) {
         self.name = name
         self.specularColor = specularColor
         self.glossiness = glossiness
+    }
+
+    public func encode(to element: Node) {
+        element.setValue(name, forAttribute: .name)
+        element.setValue(specularColor, forAttribute: .specularColor)
+        element.setValue(glossiness, forAttribute: .glossiness)
+    }
+
+    public init(from element: Node) throws {
+        name = try element.value(forAttribute: .name)
+        specularColor = try element.value(forAttribute: .specularColor)
+        glossiness = try element.value(forAttribute: .glossiness)
     }
 }
 

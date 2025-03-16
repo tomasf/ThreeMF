@@ -2,12 +2,11 @@ import Foundation
 import Nodal
 
 // metadata
-@XMLCodable
-public struct Metadata {
-    @Attribute(.name) public let name: Name
-    @TextContent public let value: String
-    @Attribute(.preserve) public let preserve: Bool?
-    @Attribute(.type) public let type: String?
+public struct Metadata: XMLElementCodable {
+    public let name: Name
+    public let value: String
+    public let preserve: Bool?
+    public let type: String?
 
     public init(name: Name, value: String, preserve: Bool = false, type: String? = nil) {
         self.name = name
@@ -51,5 +50,19 @@ public struct Metadata {
                 self = .custom(string)
             }
         }
+    }
+
+    public func encode(to element: Node) {
+        element.setValue(name, forAttribute: .name)
+        element.setContent(value)
+        element.setValue(preserve, forAttribute: .preserve)
+        element.setValue(type, forAttribute: .type)
+    }
+
+    public init(from element: Node) throws {
+        name = try element.value(forAttribute: .name)
+        value = try element.content()
+        preserve = try element.value(forAttribute: .preserve)
+        type = try element.value(forAttribute: .type)
     }
 }

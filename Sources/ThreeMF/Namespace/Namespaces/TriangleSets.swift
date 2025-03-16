@@ -4,8 +4,8 @@ import Nodal
 internal struct TriangleSets: NamespaceSpecification {
     static let namespace = Namespace.triangleSets
 
-    static let triangleSets = element("trianglesets")
-    static let triangleSet = element("triangleset")
-    static let ref = element("ref")
-    static let refRange = element("refrange")
+    static let triangleSets = elementName("trianglesets")
+    static let triangleSet = elementName("triangleset")
+    static let ref = elementName("ref")
+    static let refRange = elementName("refrange")
 }

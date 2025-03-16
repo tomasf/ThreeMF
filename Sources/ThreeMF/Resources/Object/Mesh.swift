@@ -1,20 +1,26 @@
 import Foundation
 import Nodal
 
-@XMLCodable
-public struct Mesh {
-    @Element(Core.vertex, containedIn: Core.vertices)
+public struct Mesh: XMLElementCodable {
     public var vertices: [Vertex]
-
-    @Element(Core.triangle, containedIn: Core.triangles)
     public var triangles: [Triangle]
-
-    @Element(TriangleSets.triangleSet, containedIn: TriangleSets.triangleSets)
     public var triangleSets: [TriangleSet]
 
     public init(vertices: [Vertex], triangles: [Triangle], triangleSets: [TriangleSet] = []) {
         self.vertices = vertices
         self.triangles = triangles
         self.triangleSets = triangleSets
+    }
+
+    public func encode(to element: Node) {
+        element.encode(vertices, elementName: Core.vertex, containedIn: Core.vertices)
+        element.encode(triangles, elementName: Core.triangle, containedIn: Core.triangles)
+        element.encode(triangleSets, elementName: TriangleSets.triangleSet, containedIn: TriangleSets.triangleSets)
+    }
+
+    public init(from element: Node) throws {
+        vertices = try element.decode(elementName: Core.vertex, containedIn: Core.vertices)
+        triangles = try element.decode(elementName: Core.triangle, containedIn: Core.triangles)
+        triangleSets = try element.decode(elementName: TriangleSets.triangleSet, containedIn: TriangleSets.triangleSets)
     }
 }

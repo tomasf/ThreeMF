@@ -5,17 +5,17 @@ import Nodal
 public struct Object: Resource {
     static public let elementName: ExpandedName = Core.object
 
-    @Attribute(.id) public var id: ResourceID
-    @Attribute(.type) public var type: ObjectType?
-    @Attribute(.thumbnail) public var thumbnail: URL?
-    @Attribute(.partNumber) public var partNumber: String?
-    @Attribute(.name) public var name: String?
+    public var id: ResourceID
+    public var type: ObjectType?
+    public var thumbnail: URL?
+    public var partNumber: String?
+    public var name: String?
 
-    @Attribute(.pid) public var propertyGroupID: ResourceID?
-    @Attribute(.pIndex) public var propertyIndex: ResourceIndex?
+    public var propertyGroupID: ResourceID?
+    public var propertyIndex: ResourceIndex?
 
-    @Element(Core.metadata) public var metadata: [Metadata]
-    @Element public var content: Content
+    public var metadata: [Metadata]
+    public var content: Content
 
     public init(
         id: ResourceID,

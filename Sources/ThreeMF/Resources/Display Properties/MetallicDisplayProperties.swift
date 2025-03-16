@@ -2,16 +2,25 @@ import Foundation
 import Nodal
 
 // m:pbmetallicdisplayproperties
-@XMLCodable
-public struct MetallicDisplayProperties: Resource {
+public struct MetallicDisplayProperties: Resource, XMLElementCodable {
     static public let elementName: ExpandedName = Materials.metallicDisplayProperties
 
-    @Attribute(.id) public var id: ResourceID
-    @Element(Materials.metallic) public var metallics: [Metallic]
+    public var id: ResourceID
+    public var metallics: [Metallic]
 
     public init(id: ResourceID, metallics: [Metallic] = []) {
         self.id = id
         self.metallics = metallics
+    }
+
+    public func encode(to element: Node) {
+        element.setValue(id, forAttribute: .id)
+        element.encode(metallics, elementName: Materials.metallic)
+    }
+
+    public init(from element: Node) throws {
+        id = try element.value(forAttribute: .id)
+        metallics = try element.decode(elementName: Materials.metallic)
     }
 }
 
@@ -24,15 +33,26 @@ public extension MetallicDisplayProperties {
 }
 
 // m:pbmetallic
-@XMLCodable
-public struct Metallic: Hashable {
-    @Attribute(.name) public var name: String
-    @Attribute(.metallicness) public var metallicness: Double
-    @Attribute(.roughness) public var roughness: Double
+public struct Metallic: Hashable, XMLElementCodable {
+    public var name: String
+    public var metallicness: Double
+    public var roughness: Double
 
     public init(name: String, metallicness: Double, roughness: Double) {
         self.name = name
         self.metallicness = metallicness
         self.roughness = roughness
+    }
+
+    public func encode(to element: Node) {
+        element.setValue(name, forAttribute: .name)
+        element.setValue(metallicness, forAttribute: .metallicness)
+        element.setValue(roughness, forAttribute: .roughness)
+    }
+
+    public init(from element: Node) throws {
+        name = try element.value(forAttribute: .name)
+        metallicness = try element.value(forAttribute: .metallicness)
+        roughness = try element.value(forAttribute: .roughness)
     }
 }

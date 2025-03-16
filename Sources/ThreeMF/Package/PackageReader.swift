@@ -26,38 +26,17 @@ public extension PackageReader<Data> {
     }
 }
 
-public extension PackageReader {
-    private var relationshipsFile: String { "_rels/.rels" }
-
+internal extension PackageReader {
     func startPartURL() throws(Error) -> URL {
-        let relsData: Data
-        do {
-            relsData = try archive.fileContents(at: relationshipsFile)
-        } catch {
-            throw .failedToReadArchiveFile(name: relationshipsFile, error: error)
-        }
+        let relationships = try Relationships(zipArchive: archive)
 
-        let relsDocument: Document
-        do {
-            relsDocument = try Document(data: relsData)
-        } catch {
-            throw .malformedRelationships(error)
-        }
-
-        let modelURI = "http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"
-
-        guard let relationships = relsDocument.documentElement,
-              let modelRelationship = relationships[elements: "Relationship"].first(where: { $0[attribute: "Type"] == modelURI }),
-              let target: String = modelRelationship[attribute: "Target"],
-              let url = URL(string: target)
-        else {
+        guard let url = relationships.firstTarget(ofType: RelationshipType.model.rawValue) else {
             throw Error.malformedRelationships(nil)
         }
-
         return url
     }
 
-    internal func modelRootElement() throws(Error) -> Node {
+    func modelRootElement() throws(Error) -> Node {
         let startPart = try startPartURL()
         guard let modelData = try? readFile(at: startPart) else {
             throw .failedToReadArchiveFile(name: startPart.relativePath, error: nil)
@@ -75,7 +54,9 @@ public extension PackageReader {
         }
         return root
     }
+}
 
+public extension PackageReader {
     func model() throws -> Model {
         return try Model(from: modelRootElement())
     }

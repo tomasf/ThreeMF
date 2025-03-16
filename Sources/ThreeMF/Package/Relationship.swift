@@ -1,5 +1,6 @@
 import Foundation
 import Nodal
+import Zip
 
 internal struct Relationships {
     private var relationships: [Relationship] = []
@@ -14,6 +15,10 @@ internal struct Relationships {
     func count(ofType relationshipType: String) -> Int {
         relationships.filter { $0.typeURI == relationshipType }.count
     }
+
+    func firstTarget(ofType relationshipType: String) -> URL? {
+        relationships.first { $0.typeURI == relationshipType }?.target
+    }
 }
 
 extension Relationships {
@@ -22,13 +27,30 @@ extension Relationships {
         let root = document.makeDocumentElement(name: "Relationships", defaultNamespace: "http://schemas.openxmlformats.org/package/2006/relationships")
 
         for relationship in relationships {
-            let element = root.addElement("Relationship")
-            element[attribute: "Target"] = relationship.target.relativePath
-            element[attribute: "Id"] = relationship.id
-            element[attribute: "Type"] = relationship.typeURI
+            relationship.appendElement(to: root)
         }
 
         return document
+    }
+
+    init(document: Document) throws {
+        guard let root = document.documentElement,
+              root.name == "Relationships" else {
+            throw Error.malformedRelationships(nil)
+        }
+
+        relationships = try root[elements: "Relationship"].map {
+            try Relationship(element: $0)
+        }
+    }
+
+    init<T>(zipArchive archive: ZipArchive<T>) throws(Error) {
+        do {
+            let document = try Document(data: archive.fileContents(at: Self.archiveFileURL.relativePath))
+            try self.init(document: document)
+        } catch {
+            throw .failedToReadArchiveFile(name: Self.archiveFileURL.relativePath, error: error)
+        }
     }
 }
 
@@ -43,10 +65,25 @@ fileprivate extension Relationships {
             self.id = id
             self.typeURI = typeURI
         }
+
+        @discardableResult
+        func appendElement(to parent: Node) -> Node {
+            let element = parent.addElement("Relationship")
+            element[attribute: "Target"] = target.relativePath
+            element[attribute: "Id"] = id
+            element[attribute: "Type"] = typeURI
+            return element
+        }
+
+        init(element: Node) throws {
+            self.id = try element.value(forAttribute: "Id")
+            self.target = try element.value(forAttribute: "Target")
+            self.typeURI = try element.value(forAttribute: "Type")
+        }
     }
 }
 
 extension Relationships {
-    static let archiveFileURL = URL(string: "/_rels/.rels")!
+    static let archiveFileURL = URL(string: "_rels/.rels")!
 }
 

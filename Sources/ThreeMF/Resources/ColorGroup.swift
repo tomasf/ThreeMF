@@ -2,35 +2,54 @@ import Foundation
 import Nodal
 
 // m:colorgroup
-@XMLCodable
-public struct ColorGroup: Resource {    
+public struct ColorGroup: Resource, XMLElementCodable {
     static public let elementName: ExpandedName = Materials.colorGroup
 
-    @Attribute(.id) public var id: ResourceID
-    @Attribute(.displayPropertiesID) public var displayPropertiesID: ResourceID?
-    @Element(Materials.color) public var colors: [ColorItem]
+    public var id: ResourceID
+    public var displayPropertiesID: ResourceID?
+    public var colors: [Color]
 
     public init(id: ResourceID, displayPropertiesID: ResourceID? = nil, colors: [Color] = []) {
         self.id = id
         self.displayPropertiesID = displayPropertiesID
-        self.colors = colors.map { ColorItem(color: $0) }
+        self.colors = colors
+    }
+
+    public func encode(to element: Node) {
+        element.setValue(id, forAttribute: .id)
+        element.setValue(displayPropertiesID, forAttribute: .displayPropertiesID)
+        element.encode(colors.map { ColorItem(color: $0) }, elementName: Materials.color)
+    }
+
+    public init(from element: Node) throws {
+        id = try element.value(forAttribute: .id)
+        displayPropertiesID = try element.value(forAttribute: .displayPropertiesID)
+        let items: [ColorItem] = try element.decode(elementName: Materials.color)
+        colors = items.map(\.color)
     }
 }
 
 public extension ColorGroup {
     @discardableResult
     mutating func addColor(_ color: Color) -> ResourceIndex {
-        colors.append(ColorItem(color: color))
+        colors.append(color)
         return colors.endIndex - 1
     }
 }
 
 // m:color
-@XMLCodable
-public struct ColorItem {
-    @Attribute(.color) var color: Color
+internal struct ColorItem: XMLElementCodable {
+    var color: Color
 
     init(color: Color) {
         self.color = color
+    }
+
+    public func encode(to element: Node) {
+        element.setValue(color, forAttribute: .color)
+    }
+
+    public init(from element: Node) throws {
+        color = try element.value(forAttribute: .color)
     }
 }

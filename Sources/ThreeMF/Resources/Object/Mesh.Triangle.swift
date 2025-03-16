@@ -3,12 +3,12 @@ import Nodal
 
 public extension Mesh {
     struct Triangle: Hashable, XMLElementCodable {
-        @Attribute(.v1) public let v1: ResourceIndex
-        @Attribute(.v2) public let v2: ResourceIndex
-        @Attribute(.v3) public let v3: ResourceIndex
+        public let v1: ResourceIndex
+        public let v2: ResourceIndex
+        public let v3: ResourceIndex
 
-        @Attribute(.pid) public let propertyIndex: Index?
-        @Attribute(.pid) public let propertyGroup: ResourceID?
+        public let propertyIndex: Index?
+        public let propertyGroup: ResourceID?
 
         public init(v1: ResourceIndex, v2: ResourceIndex, v3: ResourceIndex, propertyIndex: Index?, propertyGroup: ResourceID? = nil) {
             self.v1 = v1

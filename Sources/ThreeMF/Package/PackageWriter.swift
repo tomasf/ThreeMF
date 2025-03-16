@@ -4,7 +4,7 @@ import Nodal
 
 public class PackageWriter<Target> {
     private let archive: ZipArchive<Target>
-    public var model: Model = Model()
+    public var model = Model()
     private var contentTypes = ContentTypes()
     private var relationships = Relationships()
 
@@ -69,51 +69,37 @@ internal extension PackageWriter {
         if filePath.hasPrefix("/") {
             filePath.removeFirst()
         }
-        return try archive.addFile(at: filePath, data: data)
+        try archive.addFile(at: filePath, data: data)
     }
 
     func xmlDocument() -> Document {
         let modelDocument = Document(model, elementName: Core.model)
 
         for namespaceName in modelDocument.undeclaredNamespaceNames {
-            guard let namespace = Namespace.namespace(for: namespaceName) else {
+            guard let namespace = Namespace.knownNamespace(for: namespaceName) else {
                 assertionFailure("Unknown namespace \(namespaceName)")
                 continue
             }
-            modelDocument.documentElement?.declareNamespace(namespaceName, forPrefix: namespace.standardPrefix)
+            modelDocument.documentElement?.declareNamespace(namespaceName, forPrefix: namespace.outputPrefix)
         }
 
         return modelDocument
     }
 
     func writeMainFiles() throws {
-        let modelDocument = xmlDocument()
-
-        for namespaceName in modelDocument.undeclaredNamespaceNames {
-            guard let namespace = Namespace.namespace(for: namespaceName) else {
-                assertionFailure("Unknown namespace \(namespaceName)")
-                continue
-            }
-            modelDocument.documentElement?.declareNamespace(namespaceName, forPrefix: namespace.standardPrefix)
-        }
-
-        let modelData = try modelDocument.xmlData()
-
         // Cura is sadly hard-coded to always read this file name, so keep it for compatibility
-        let modelName = "3dmodel.model"
-        let modelDirectory = "/3D"
-        guard let modelURL = URL(string: modelDirectory)?
-            .appendingPathComponent(modelName)
-        else {
+        guard let modelURL = URL(string: "/3D/3dmodel.model") else {
             fatalError("Failed to initialize model URL")
         }
 
-        try addFile(at: modelURL, contentType: MimeType.model.rawValue, relationshipType: RelationshipType.model.rawValue, data: modelData)
+        try addFile(
+            at: modelURL,
+            contentType: MimeType.model.rawValue,
+            relationshipType: RelationshipType.model.rawValue,
+            data: try xmlDocument().xmlData()
+        )
 
-        let contentTypesData = try contentTypes.xmlDocument().xmlData()
-        let relationshipData = try relationships.xmlDocument().xmlData()
-
-        try addFile(at: ContentTypes.archiveFileURL, data: contentTypesData)
-        try addFile(at: Relationships.archiveFileURL, data: relationshipData)
+        try addFile(at: ContentTypes.archiveFileURL, data: contentTypes.xmlDocument().xmlData())
+        try addFile(at: Relationships.archiveFileURL, data: relationships.xmlDocument().xmlData())
     }
 }

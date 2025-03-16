@@ -9,9 +9,9 @@ public struct CompositeMaterialGroup: Resource, XMLElementCodable {
     public var baseMaterialGroupID: ResourceID // matid
     public var baseMaterialIndices: ResourceIndices  // Indices inside the material group
     public var displayPropertiesID: ResourceID?  // Points to a <displayproperties>
-    public var composites: [Numbers]
+    public var composites: [[Double]]
 
-    public init(id: ResourceID, baseMaterialGroupID: ResourceID, baseMaterialIndices: ResourceIndices, displayPropertiesID: ResourceID? = nil, composites: [Numbers]) {
+    public init(id: ResourceID, baseMaterialGroupID: ResourceID, baseMaterialIndices: ResourceIndices, displayPropertiesID: ResourceID? = nil, composites: [[Double]]) {
         self.id = id
         self.baseMaterialGroupID = baseMaterialGroupID
         self.baseMaterialIndices = baseMaterialIndices

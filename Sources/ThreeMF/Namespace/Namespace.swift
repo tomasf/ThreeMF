@@ -1,86 +1,101 @@
 import Foundation
 import Nodal
 
-internal struct Namespace: Hashable {
-    let uri: String
-    let standardPrefix: String?
-    let name: String
+public struct Namespace: Hashable, Sendable {
+    public let uri: String
+    internal let outputPrefix: String?
 
-    init(uri: String, standardPrefix: String?, name: String) {
+    internal init(uri: String, outputPrefix: String?) {
         self.uri = uri
-        self.standardPrefix = standardPrefix
-        self.name = name
+        self.outputPrefix = outputPrefix
     }
 }
 
-extension Namespace {
+internal extension Namespace {
     static var known: Set<Self> {
         [.core, .triangleSets, .mirroring, .materials, .volumetric, .implicit, .boolean, .displacement, .slice]
     }
 
-    static func namespace(for uri: String) -> Self? {
+    static func knownNamespace(for uri: String) -> Self? {
         return Self.known.first(where: { $0.uri == uri })
+    }
+
+    static func namespaces(forPrefixes prefixes: [String], in element: Node) -> Set<Namespace> {
+        let namespaces = element.namespacesInScope
+
+        return Set(prefixes.compactMap {
+            namespaces[$0].map { Namespace.knownNamespace(for: $0) ?? Namespace(uri: $0, outputPrefix: nil) }
+        })
     }
 }
 
-extension Namespace {
+public extension Namespace {
     static let xml = Self(
         uri: "http://www.w3.org/XML/1998/namespace",
-        standardPrefix: "xml",
-        name: "XML"
+        outputPrefix: "xml"
     )
 
     static let core = Self(
         uri: "http://schemas.microsoft.com/3dmanufacturing/core/2015/02",
-        standardPrefix: nil,
-        name: "Core"
+        outputPrefix: nil
     )
 
     static let triangleSets = Self(
         uri: "http://schemas.microsoft.com/3dmanufacturing/trianglesets/2021/07",
-        standardPrefix: "t",
-        name: "Triangle Sets"
+        outputPrefix: "t"
     )
 
     static let materials = Self(
         uri: "http://schemas.microsoft.com/3dmanufacturing/material/2015/02",
-        standardPrefix: "m",
-        name: "Materials and Properties"
+        outputPrefix: "m"
     )
 
     static let mirroring = Self(
         uri: "http://schemas.microsoft.com/3dmanufacturing/mirroring/2021/07",
-        standardPrefix: "mm",
-        name: "Mirroring"
+        outputPrefix: "mm"
     )
 
     static let volumetric = Self(
         uri: "http://schemas.3mf.io/3dmanufacturing/volumetric/2022/01",
-        standardPrefix: "v",
-        name: "Volumetric"
+        outputPrefix: "v"
     )
 
     static let implicit = Self(
         uri: "http://schemas.3mf.io/3dmanufacturing/implicit/2023/12",
-        standardPrefix: "i",
-        name: "Implicit"
+        outputPrefix: "i"
     )
 
     static let boolean = Self(
         uri: "http://schemas.3mf.io/3dmanufacturing/booleanoperations/2023/07",
-        standardPrefix: "bo",
-        name: "Boolean Operations"
+        outputPrefix: "bo"
     )
 
     static let displacement = Self(
         uri: "http://schemas.3mf.io/3dmanufacturing/displacement/2023/10",
-        standardPrefix: "d",
-        name: "Displacement"
+        outputPrefix: "d"
     )
 
     static let slice = Self(
         uri: "http://schemas.microsoft.com/3dmanufacturing/slice/2015/07",
-        standardPrefix: "s",
-        name: "Slice"
+        outputPrefix: "s"
     )
+}
+
+internal protocol NamespaceSpecification {
+    static var namespace: Namespace { get }
+}
+
+extension NamespaceSpecification {
+    static func attributeName(_ localName: String) -> ExpandedName {
+        ExpandedName(namespaceName: namespace.uri, localName: localName)
+    }
+
+    static func elementName(_ localName: String) -> ExpandedName {
+        ExpandedName(namespaceName: namespace.uri, localName: localName)
+    }
+}
+
+internal struct XML: NamespaceSpecification {
+    static let namespace = Namespace.xml
+    static let lang = attributeName("lang")
 }

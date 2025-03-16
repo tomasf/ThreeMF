@@ -2,16 +2,15 @@ import Foundation
 import Nodal
 
 // m:texture2d
-@XMLCodable
-public struct Texture2D: Resource {
+public struct Texture2D: Resource, XMLElementCodable {
     static public let elementName: ExpandedName = Materials.texture2D
 
-    @Attribute(.id) public var id: ResourceID
-    @Attribute(.path) public var pathURL: URL
-    @Attribute(.contentType) public var contentType: ContentType
-    @Attribute(.tileStyleU) public var tileStyleU: TileStyle?
-    @Attribute(.tileStyleV) public var tileStyleV: TileStyle?
-    @Attribute(.filter) public var filter: Filter?
+    public var id: ResourceID
+    public var pathURL: URL
+    public var contentType: ContentType
+    public var tileStyleU: TileStyle?
+    public var tileStyleV: TileStyle?
+    public var filter: Filter?
 
     public init(
         id: ResourceID,
@@ -27,6 +26,24 @@ public struct Texture2D: Resource {
         self.tileStyleU = tileStyleU
         self.tileStyleV = tileStyleV
         self.filter = filter
+    }
+
+    public func encode(to element: Node) {
+        element.setValue(id, forAttribute: .id)
+        element.setValue(pathURL, forAttribute: .path)
+        element.setValue(contentType, forAttribute: .contentType)
+        element.setValue(tileStyleU, forAttribute: .tileStyleU)
+        element.setValue(tileStyleV, forAttribute: .tileStyleV)
+        element.setValue(filter, forAttribute: .filter)
+    }
+
+    public init(from element: Node) throws {
+        id = try element.value(forAttribute: .id)
+        pathURL = try element.value(forAttribute: .path)
+        contentType = try element.value(forAttribute: .contentType)
+        tileStyleU = try element.value(forAttribute: .tileStyleU)
+        tileStyleV = try element.value(forAttribute: .tileStyleV)
+        filter = try element.value(forAttribute: .filter)
     }
 }
 

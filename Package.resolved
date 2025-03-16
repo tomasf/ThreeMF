@@ -1,13 +1,13 @@
 {
-  "originHash" : "0841e3e942378bdf8be8895975113746075a6d26333662e682a802816c92633b",
+  "originHash" : "5c6ea32b93f18a619c76ad0c67cc8e2579d505bf9fbc9983dcfdf7ab29ab0630",
   "pins" : [
     {
-      "identity" : "swift-syntax",
+      "identity" : "nodal",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/swiftlang/swift-syntax.git",
+      "location" : "https://github.com/tomasf/Nodal.git",
       "state" : {
-        "revision" : "0687f71944021d616d34d922343dcef086855920",
-        "version" : "600.0.1"
+        "revision" : "763efeebe6bf1c26958dcbb29661a9af45cced52",
+        "version" : "0.3.1"
       }
     },
     {

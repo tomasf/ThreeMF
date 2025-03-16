@@ -2,17 +2,16 @@ import Foundation
 import Nodal
 
 // m:pbspeculartexturedisplayproperties
-@XMLCodable
 public struct SpecularTextureDisplayProperties: Resource {
     static public let elementName: ExpandedName = Materials.specularTextureDisplayProperties
 
-    @Attribute(.id) public var id: ResourceID
-    @Attribute(.name) public var name: String
-    @Attribute(.specularTextureID) public var specularTextureID: ResourceID
-    @Attribute(.glossinessTextureID) public var glossinessTextureID: ResourceID
-    @Attribute(.diffuseFactor) public var diffuseFactor: Color?
-    @Attribute(.specularFactor) public var specularFactor: Color?
-    @Attribute(.glossinessFactor) public var glossinessFactor: Double?
+    public var id: ResourceID
+    public var name: String
+    public var specularTextureID: ResourceID
+    public var glossinessTextureID: ResourceID
+    public var diffuseFactor: Color?
+    public var specularFactor: Color?
+    public var glossinessFactor: Double?
 
     public init(id: ResourceID, name: String, specularTextureID: ResourceID, glossinessTextureID: ResourceID, diffuseFactor: Color? = nil, specularFactor: Color? = nil, glossinessFactor: Double? = nil) {
         self.id = id
@@ -22,6 +21,26 @@ public struct SpecularTextureDisplayProperties: Resource {
         self.diffuseFactor = diffuseFactor
         self.specularFactor = specularFactor
         self.glossinessFactor = glossinessFactor
+    }
+
+    public func encode(to element: Node) {
+        element.setValue(id, forAttribute: .id)
+        element.setValue(name, forAttribute: .name)
+        element.setValue(specularTextureID, forAttribute: .specularTextureID)
+        element.setValue(glossinessTextureID, forAttribute: .glossinessTextureID)
+        element.setValue(diffuseFactor, forAttribute: .diffuseFactor)
+        element.setValue(specularFactor, forAttribute: .specularFactor)
+        element.setValue(glossinessFactor, forAttribute: .glossinessFactor)
+    }
+
+    public init(from element: Node) throws {
+        id = try element.value(forAttribute: .id)
+        name = try element.value(forAttribute: .name)
+        specularTextureID = try element.value(forAttribute: .specularTextureID)
+        glossinessTextureID = try element.value(forAttribute: .glossinessTextureID)
+        diffuseFactor = try element.value(forAttribute: .diffuseFactor)
+        specularFactor = try element.value(forAttribute: .specularFactor)
+        glossinessFactor = try element.value(forAttribute: .glossinessFactor)
     }
 }
 

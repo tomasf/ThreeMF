@@ -10,4 +10,8 @@ internal extension Collection {
     subscript(safe index: Index) -> Element? {
         indices.contains(index) ? self[index] : nil
     }
+
+    var nonEmpty: Self? {
+        isEmpty ? nil : self
+    }
 }
