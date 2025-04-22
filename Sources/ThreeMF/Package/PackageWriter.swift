@@ -4,9 +4,11 @@ import Nodal
 
 public class PackageWriter<Target> {
     private let archive: ZipArchive<Target>
-    public var model = Model()
     private var contentTypes = ContentTypes()
     private var relationships = Relationships()
+
+    public var model = Model()
+    public var compressionLevel = CompressionLevel.default
 
     private init(archive: ZipArchive<Target>) {
         self.archive = archive
@@ -69,7 +71,7 @@ internal extension PackageWriter {
         if filePath.hasPrefix("/") {
             filePath.removeFirst()
         }
-        try archive.addFile(at: filePath, data: data)
+        try archive.addFile(at: filePath, data: data, compression: compressionLevel)
     }
 
     func xmlDocument() -> Document {
