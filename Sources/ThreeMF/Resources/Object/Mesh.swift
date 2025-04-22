@@ -1,7 +1,7 @@
 import Foundation
 import Nodal
 
-public struct Mesh: XMLElementCodable {
+public struct Mesh: Sendable, XMLElementCodable {
     public var vertices: [Vertex]
     public var triangles: [Triangle]
     public var triangleSets: [TriangleSet]

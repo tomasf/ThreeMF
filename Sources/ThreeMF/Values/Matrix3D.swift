@@ -2,7 +2,7 @@ import Foundation
 import Nodal
 
 // ST_Matrix3D
-public struct Matrix3D: XMLValueCodable {
+public struct Matrix3D: Sendable, XMLValueCodable {
     public let values: [[Double]]
 
     public init(values: [[Double]]) {

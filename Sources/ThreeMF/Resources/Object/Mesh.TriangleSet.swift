@@ -3,7 +3,7 @@ import Nodal
 
 // t:triangleset
 public extension Mesh {
-    struct TriangleSet {
+    struct TriangleSet: Sendable {
         let elementName: ExpandedName = TriangleSets.triangleSet
 
         public var name: String

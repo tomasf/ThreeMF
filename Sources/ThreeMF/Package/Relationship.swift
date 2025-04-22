@@ -2,7 +2,7 @@ import Foundation
 import Nodal
 import Zip
 
-internal struct Relationships {
+internal struct Relationships: Sendable {
     private var relationships: [Relationship] = []
 
     internal init() {}
@@ -55,7 +55,7 @@ extension Relationships {
 }
 
 fileprivate extension Relationships {
-    struct Relationship {
+    struct Relationship: Sendable {
         let target: URL
         let id: String
         let typeURI: String

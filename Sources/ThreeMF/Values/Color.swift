@@ -1,7 +1,7 @@
 import Foundation
 import Nodal
 
-public struct Color: Hashable {
+public struct Color: Hashable, Sendable {
     public typealias Component = UInt8
     public let red: Component
     public let green: Component

@@ -2,7 +2,7 @@ import Foundation
 import Nodal
 
 public extension Mesh {
-    struct Vertex: Hashable, XMLElementCodable {
+    struct Vertex: Hashable, Sendable, XMLElementCodable {
         public let x: Double
         public let y: Double
         public let z: Double

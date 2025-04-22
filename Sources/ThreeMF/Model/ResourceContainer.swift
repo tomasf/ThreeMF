@@ -1,7 +1,7 @@
 import Foundation
 import Nodal
 
-public struct ResourceContainer {
+public struct ResourceContainer: Sendable {
     public var resources: [any Resource]
 
     public init(resources: [any Resource]) {

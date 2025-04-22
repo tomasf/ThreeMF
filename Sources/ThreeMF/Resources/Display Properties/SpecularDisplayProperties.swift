@@ -33,7 +33,7 @@ public extension SpecularDisplayProperties {
 }
 
 // m:pbspecular
-public struct Specular: Hashable, XMLElementCodable {
+public struct Specular: Hashable, Sendable, XMLElementCodable {
     public var name: String
     public var specularColor: Color?
     public var glossiness: Double?

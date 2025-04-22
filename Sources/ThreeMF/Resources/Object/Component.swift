@@ -2,7 +2,7 @@ import Foundation
 import Nodal
 
 // component
-public struct Component: XMLElementCodable {
+public struct Component: Sendable, XMLElementCodable {
     public var objectID: ResourceID
     public var transform: Matrix3D?
 

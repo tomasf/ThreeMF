@@ -52,12 +52,12 @@ public extension Texture2D {
         (tileStyleU ?? .default, tileStyleV ?? .default)
     }
 
-    enum ContentType: String, XMLValueCodable, Hashable, Sendable {
+    enum ContentType: String, Hashable, Sendable, XMLValueCodable {
         case png = "image/png"
         case jpeg = "image/jpeg"
     }
 
-    enum TileStyle: String, XMLValueCodable, Hashable, Sendable {
+    enum TileStyle: String, Hashable, Sendable, XMLValueCodable {
         case wrap
         case mirror
         case clamp
@@ -66,7 +66,7 @@ public extension Texture2D {
         public static let `default` = Self.wrap
     }
 
-    enum Filter: String, XMLValueCodable, Hashable, Sendable {
+    enum Filter: String, Hashable, Sendable, XMLValueCodable {
         case auto
         case linear
         case nearest

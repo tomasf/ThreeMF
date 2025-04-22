@@ -1,7 +1,7 @@
 import Foundation
 import Nodal
 
-public struct Item: XMLElementCodable {
+public struct Item: Sendable, XMLElementCodable {
     public var objectID: ResourceID
     public var transform: Matrix3D?
     public var partNumber: String?

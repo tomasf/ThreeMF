@@ -2,7 +2,7 @@ import Foundation
 import Nodal
 
 public extension Mesh {
-    struct Triangle: Hashable, XMLElementCodable {
+    struct Triangle: Hashable, Sendable, XMLElementCodable {
         public let v1: ResourceIndex
         public let v2: ResourceIndex
         public let v3: ResourceIndex
@@ -37,7 +37,7 @@ public extension Mesh {
 }
 
 public extension Mesh.Triangle {
-    enum Index: Hashable {
+    enum Index: Hashable, Sendable {
         case uniform (ResourceIndex)
         case perVertex (ResourceIndex, ResourceIndex, ResourceIndex)
 

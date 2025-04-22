@@ -33,7 +33,7 @@ public extension MetallicDisplayProperties {
 }
 
 // m:pbmetallic
-public struct Metallic: Hashable, XMLElementCodable {
+public struct Metallic: Hashable, Sendable, XMLElementCodable {
     public var name: String
     public var metallicness: Double
     public var roughness: Double

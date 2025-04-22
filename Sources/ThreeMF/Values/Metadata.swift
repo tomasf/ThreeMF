@@ -2,7 +2,7 @@ import Foundation
 import Nodal
 
 // metadata
-public struct Metadata: XMLElementCodable {
+public struct Metadata: Sendable, XMLElementCodable {
     public let name: Name
     public let value: String
     public let preserve: Bool?
@@ -15,7 +15,7 @@ public struct Metadata: XMLElementCodable {
         self.type = type
     }
 
-    public enum Name: Hashable, XMLValueCodable {
+    public enum Name: Hashable, Sendable, XMLValueCodable {
         case title
         case designer
         case description

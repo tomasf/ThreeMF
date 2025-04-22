@@ -1,12 +1,12 @@
 import Foundation
 import Nodal
 
-public protocol Resource: XMLElementCodable {
+public protocol Resource: Sendable, XMLElementCodable {
     var id: ResourceID { get set }
     static var elementName: ExpandedName { get }
 }
 
-public struct PropertyReference: Hashable {
+public struct PropertyReference: Hashable, Sendable {
     public let groupID: ResourceID
     public let index: ResourceIndex
 

@@ -1,7 +1,7 @@
 import Foundation
 import Nodal
 
-public struct Model: XMLElementCodable {
+public struct Model: Sendable, XMLElementCodable {
     public var unit: Unit?
     public var xmlLanguageCode: String?
     public var languageCode: String?

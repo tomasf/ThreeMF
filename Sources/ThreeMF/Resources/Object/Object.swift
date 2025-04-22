@@ -89,7 +89,7 @@ extension URL: XMLValueCodable {
 }
 
 public extension Object {
-    enum Content {
+    enum Content: Sendable {
         case mesh (Mesh)
         case components ([Component])
     }

@@ -34,7 +34,7 @@ public struct Texture2DGroup: Resource, XMLElementCodable {
 
 public extension Texture2DGroup {
     // m:tex2coord
-    struct Coordinate: XMLElementCodable {
+    struct Coordinate: Sendable, XMLElementCodable {
         public let u: Double
         public let v: Double
 

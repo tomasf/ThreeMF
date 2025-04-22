@@ -38,7 +38,7 @@ public extension ColorGroup {
 }
 
 // m:color
-internal struct ColorItem: XMLElementCodable {
+internal struct ColorItem: Sendable, XMLElementCodable {
     var color: Color
 
     init(color: Color) {

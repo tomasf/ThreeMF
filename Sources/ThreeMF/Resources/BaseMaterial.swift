@@ -29,7 +29,7 @@ public struct BaseMaterialGroup: Resource, XMLElementCodable {
 }
 
 // base
-public struct BaseMaterial: XMLElementCodable {
+public struct BaseMaterial: Sendable, XMLElementCodable {
     public let name: String
     public let displayColor: Color
 

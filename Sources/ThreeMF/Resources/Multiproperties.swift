@@ -38,7 +38,7 @@ public struct Multiproperties: Resource, XMLElementCodable {
 }
 
 public extension Multiproperties {
-    struct Layer {
+    struct Layer: Sendable {
         let property: PropertyReference
         let blendMethod: BlendMethod
     }
@@ -56,7 +56,7 @@ public extension Multiproperties {
         }
     }
 
-    enum BlendMethod: String, Hashable, XMLValueCodable {
+    enum BlendMethod: String, Hashable, Sendable, XMLValueCodable {
         case mix
         case multiply
     }

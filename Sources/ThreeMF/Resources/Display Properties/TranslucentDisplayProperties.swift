@@ -26,7 +26,7 @@ public struct TranslucentDisplayProperties: Resource, XMLElementCodable {
 
 
 // m:translucent
-public struct Translucent: XMLElementCodable {
+public struct Translucent: Sendable, XMLElementCodable {
     public var name: String
     public var attenuation: [Double]
     public var refractiveIndices: [Double]
