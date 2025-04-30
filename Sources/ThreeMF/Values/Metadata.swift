@@ -8,7 +8,7 @@ public struct Metadata: Sendable, XMLElementCodable {
     public let preserve: Bool?
     public let type: String?
 
-    public init(name: Name, value: String, preserve: Bool = false, type: String? = nil) {
+    public init(name: Name, value: String, preserve: Bool? = nil, type: String? = nil) {
         self.name = name
         self.value = value
         self.preserve = preserve
