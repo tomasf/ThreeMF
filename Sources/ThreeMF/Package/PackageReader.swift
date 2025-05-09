@@ -27,16 +27,16 @@ public extension PackageReader<Data> {
 }
 
 internal extension PackageReader {
-    func startPartURL() throws(Error) -> URL {
+    func startPartURL() throws(ThreeMFError) -> URL {
         let relationships = try Relationships(zipArchive: archive)
 
         guard let url = relationships.firstTarget(ofType: RelationshipType.model.rawValue) else {
-            throw Error.malformedRelationships(nil)
+            throw ThreeMFError.malformedRelationships(nil)
         }
         return url
     }
 
-    func modelRootElement() throws(Error) -> Node {
+    func modelRootElement() throws(ThreeMFError) -> Node {
         let startPart = try startPartURL()
         guard let modelData = try? readFile(at: startPart) else {
             throw .failedToReadArchiveFile(name: startPart.relativePath, error: nil)

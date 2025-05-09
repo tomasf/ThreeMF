@@ -5,7 +5,7 @@ public typealias ResourceID = Int
 public typealias ResourceIndex = Int
 public typealias ResourceIndices = [ResourceIndex]
 
-public enum Error: Swift.Error {
+public enum ThreeMFError: Error {
     case failedToReadArchiveFile (name: String, error: Swift.Error?)
     case malformedRelationships ((any Swift.Error)?)
 

@@ -36,7 +36,7 @@ extension Relationships {
     init(document: Document) throws {
         guard let root = document.documentElement,
               root.name == "Relationships" else {
-            throw Error.malformedRelationships(nil)
+            throw ThreeMFError.malformedRelationships(nil)
         }
 
         relationships = try root[elements: "Relationship"].map {
@@ -44,7 +44,7 @@ extension Relationships {
         }
     }
 
-    init<T>(zipArchive archive: ZipArchive<T>) throws(Error) {
+    init<T>(zipArchive archive: ZipArchive<T>) throws(ThreeMFError) {
         do {
             let document = try Document(data: archive.fileContents(at: Self.archiveFileURL.relativePath))
             try self.init(document: document)
