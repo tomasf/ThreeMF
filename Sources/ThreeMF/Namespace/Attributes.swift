@@ -39,9 +39,6 @@ extension AttributeName where Self == ExpandedName {
     static var p2: Self { attribute("p2") }
     static var p3: Self { attribute("p3") }
 
-    // This is a Prusa extension. It should live in its own namespace, but alas, it does not
-    static var printable: Self { attribute("printable") }
-
     // MARK: - Materials
     static var displayPropertiesID: Self { attribute("displaypropertiesid") }
     static var values: Self { attribute("values") }

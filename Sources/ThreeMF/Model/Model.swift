@@ -8,6 +8,7 @@ public struct Model: Sendable, XMLElementCodable {
 
     public var requiredExtensions: Set<Namespace>
     public var recommendedExtensions: Set<Namespace>
+    public var customNamespaces: [String: String]
 
     public var metadata: [Metadata]
     public var resources: ResourceContainer
@@ -19,6 +20,7 @@ public struct Model: Sendable, XMLElementCodable {
         languageCode: String? = nil,
         requiredExtensions: Set<Namespace> = [],
         recommendedExtensions: Set<Namespace> = [],
+        customNamespaces: [String: String] = [:], // Prefix: URI
         metadata: [Metadata] = [],
         resources: [any Resource] = [],
         buildItems: [Item] = []
@@ -28,6 +30,7 @@ public struct Model: Sendable, XMLElementCodable {
         self.languageCode = languageCode
         self.requiredExtensions = requiredExtensions
         self.recommendedExtensions = recommendedExtensions
+        self.customNamespaces = customNamespaces
 
         self.metadata = metadata
         self.resources = ResourceContainer(resources: resources)
@@ -50,7 +53,6 @@ public struct Model: Sendable, XMLElementCodable {
         xmlLanguageCode = try element.value(forAttribute: XML.lang)
         languageCode = try element.value(forAttribute: .language)
 
-
         if let requiredExtensionPrefixes: [String] = try element.value(forAttribute: .requiredExtensions) {
             requiredExtensions = Namespace.namespaces(forPrefixes: requiredExtensionPrefixes, in: element)
         } else {
@@ -62,6 +64,9 @@ public struct Model: Sendable, XMLElementCodable {
         } else {
             recommendedExtensions = []
         }
+
+        let knownNamespaces = Set(Namespace.known.map(\.uri))
+        customNamespaces = element.declaredNamespaces.filter { $0 != nil && knownNamespaces.contains($1) } as! [String: String]
 
         metadata = try element.decode(elementName: Core.metadata)
         resources = try element.decode(elementName: Core.resources)

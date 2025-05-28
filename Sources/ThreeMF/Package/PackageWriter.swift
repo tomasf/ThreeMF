@@ -77,6 +77,10 @@ internal extension PackageWriter {
     func xmlDocument() -> Document {
         let modelDocument = Document(model, elementName: Core.model)
 
+        for (prefix, uri) in model.customNamespaces {
+            modelDocument.documentElement?.declareNamespace(uri, forPrefix: prefix)
+        }
+
         for namespaceName in modelDocument.undeclaredNamespaceNames {
             guard let namespace = Namespace.knownNamespace(for: namespaceName) else {
                 assertionFailure("Unknown namespace \(namespaceName)")
