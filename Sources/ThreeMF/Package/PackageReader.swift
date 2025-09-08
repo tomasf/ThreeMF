@@ -12,7 +12,7 @@ public struct PackageReader<Target> {
 
 public extension PackageReader<URL> {
     init(url fileURL: URL) throws {
-        try self.init(archive: ZipArchive(url: fileURL))
+        try self.init(archive: ZipArchive(url: fileURL, mode: .readOnly))
     }
 
     func invalidate() {
