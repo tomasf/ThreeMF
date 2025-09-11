@@ -12,9 +12,19 @@ public struct Namespace: Hashable, Sendable {
 }
 
 internal extension Namespace {
-    static var known: Set<Self> {
-        [.core, .triangleSets, .mirroring, .materials, .volumetric, .implicit, .boolean, .displacement, .slice]
-    }
+    static var known: Set<Self> {[
+        .core,
+        .triangleSets,
+        .mirroring,
+        .materials,
+        .volumetric,
+        .implicit,
+        .boolean,
+        .displacement,
+        .slice,
+        .production,
+        .alternatives
+    ]}
 
     static func knownNamespace(for uri: String) -> Self? {
         return Self.known.first(where: { $0.uri == uri })
@@ -48,6 +58,16 @@ public extension Namespace {
     static let materials = Self(
         uri: "http://schemas.microsoft.com/3dmanufacturing/material/2015/02",
         outputPrefix: "m"
+    )
+
+    static let production = Self(
+        uri: "http://schemas.microsoft.com/3dmanufacturing/production/2015/06",
+        outputPrefix: "p"
+    )
+
+    static let alternatives = Self(
+        uri: "http://schemas.microsoft.com/3dmanufacturing/production/alternatives/2021/04",
+        outputPrefix: "pa"
     )
 
     static let mirroring = Self(

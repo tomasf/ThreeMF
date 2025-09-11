@@ -8,6 +8,7 @@ public typealias ResourceIndices = [ResourceIndex]
 public enum ThreeMFError: Error {
     case failedToReadArchiveFile (name: String, error: Swift.Error?)
     case malformedRelationships ((any Swift.Error)?)
+    case invalidModelName (String)
 
     case missingElement (name: ExpandedName)
     case missingAttribute (name: ExpandedName)

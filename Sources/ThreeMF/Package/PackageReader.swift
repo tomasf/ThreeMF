@@ -36,29 +36,30 @@ internal extension PackageReader {
         return url
     }
 
-    func modelRootElement() throws(ThreeMFError) -> Node {
-        let startPart = try startPartURL()
-        guard let modelData = try? readFile(at: startPart) else {
-            throw .failedToReadArchiveFile(name: startPart.relativePath, error: nil)
+    func modelRootElement(at path: URL?) throws(ThreeMFError) -> Node {
+        let resolvedPath = if let path { path } else { try startPartURL() }
+
+        guard let modelData = try? readFile(at: resolvedPath) else {
+            throw .failedToReadArchiveFile(name: resolvedPath.relativePath, error: nil)
         }
 
         let modelDocument: Document
         do {
             modelDocument = try Document(data: modelData)
         } catch {
-            throw .failedToReadArchiveFile(name: startPart.relativePath, error: error)
+            throw .failedToReadArchiveFile(name: resolvedPath.relativePath, error: error)
         }
 
         guard let root = modelDocument.documentElement else {
-            throw .failedToReadArchiveFile(name: startPart.relativePath, error: nil)
+            throw .failedToReadArchiveFile(name: resolvedPath.relativePath, error: nil)
         }
         return root
     }
 }
 
 public extension PackageReader {
-    func model() throws -> Model {
-        return try Model(from: modelRootElement())
+    func model(at path: URL? = nil) throws -> Model {
+        return try Model(from: modelRootElement(at: path))
     }
 
     func readFile(at url: URL) throws -> Data? {

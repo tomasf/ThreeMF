@@ -100,25 +100,3 @@ extension Mesh.Triangle.Index {
     }
 }
 
-public extension Mesh.Triangle {
-    func resolvedProperties(in object: Object) -> [PropertyReference]? {
-        guard let groupID = propertyGroup ?? object.propertyGroupID else {
-            return nil
-        }
-
-        switch propertyIndex {
-        case .perVertex (let p1, let p2, let p3):
-            return [p1, p2, p3].map { PropertyReference(groupID: groupID, index: $0) }
-
-        case .uniform (let index):
-            return [PropertyReference(groupID: groupID, index: index)]
-
-        case .none:
-            if let index = object.propertyIndex {
-                return [PropertyReference(groupID: groupID, index: index)]
-            } else {
-                return nil
-            }
-        }
-    }
-}

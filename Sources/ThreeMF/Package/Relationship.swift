@@ -19,6 +19,8 @@ internal struct Relationships: Sendable {
     func firstTarget(ofType relationshipType: String) -> URL? {
         relationships.first { $0.typeURI == relationshipType }?.target
     }
+
+    var isEmpty: Bool { relationships.isEmpty }
 }
 
 extension Relationships {
