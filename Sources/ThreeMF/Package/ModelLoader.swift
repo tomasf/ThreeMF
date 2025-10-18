@@ -1,6 +1,25 @@
 import Foundation
 import Zip
 
+/// Loads 3MF model packages from either a URL or in‑memory data, resolves cross‑file references,
+/// and produces a flattened, render‑ready representation of meshes and build items.
+///
+/// ModelLoader reads a root 3MF model and any additional models it references. It then resolves
+/// each build item down to concrete mesh instances with accumulated transforms, properties, and metadata.
+/// The result is a LoadedModel that is convenient to render or further process.
+///
+/// Usage:
+/// - Initialize with a URL or Data
+/// - Call `load()` to obtain a `LoadedModel`
+///
+/// Example:
+/// ```swift
+/// let loader = ModelLoader(url: fileURL)
+/// let loaded = try await loader.load()
+/// ```
+///
+/// Threading:
+/// - `load()` is async and can be awaited from Swift Concurrency contexts.
 public struct ModelLoader<Source: Sendable> {
     private let source: Source
 
@@ -8,14 +27,30 @@ public struct ModelLoader<Source: Sendable> {
         self.source = source
     }
 
+    /// Creates a loader that will read a 3MF package from a file URL.
+    ///
+    /// - Parameter url: The URL of the 3MF package to load.
     public init(url: URL) where Source == URL {
         self.init(source: url)
     }
 
+    /// Creates a loader that will read a 3MF package from in‑memory data.
+    ///
+    /// - Parameter data: The 3MF package data to load.
     public init(data: Data) where Source == Data {
         self.init(source: data)
     }
 
+    /// Loads the 3MF package, resolves referenced models and objects, and returns a flattened representation.
+    ///
+    /// The returned `LoadedModel` contains:
+    /// - The parsed root model
+    /// - All referenced models (ordered)
+    /// - A deduplicated list of meshes with stable indices
+    /// - Each build item expanded into concrete components referencing mesh indices with accumulated transforms and metadata
+    ///
+    /// - Returns: A `LoadedModel` ready for rendering or further processing.
+    /// - Throws: `LoadingError` if referenced models or objects cannot be found, or other errors encountered while reading the package.
     public func load() async throws -> LoadedModel {
         let readerSource = self.source
 
@@ -141,34 +176,82 @@ public struct ModelLoader<Source: Sendable> {
 }
 
 public extension ModelLoader {
+    /// Errors that can occur while loading and resolving a 3MF package.
     enum LoadingError: Error {
+        /// A referenced model file could not be found in the package.
+        /// - Parameter path: The path of the missing model file.
         case modelNotFoundInArchive (path: URL)
+
+        /// An object reference could not be resolved in the specified model.
+        /// - Parameters:
+        ///   - modelPath: The model file containing the expected object, or `nil` for the root model.
+        ///   - _: The identifier of the missing object.
         case objectNotFound (modelPath: URL?, ResourceID)
     }
 
+    /// A flattened, render‑ready representation of a 3MF package after loading and resolution.
+    ///
+    /// LoadedModel contains:
+    /// - The root model that initiated loading
+    /// - All additional models that were referenced
+    /// - A deduplicated array of meshes with stable indices
+    /// - Items expanded into components that reference meshes and carry transforms and properties
     struct LoadedModel: Sendable {
+        /// The parsed root model.
         public let rootModel: Model
+
+        /// The set of referenced models, ordered to align with `LoadedMesh.modelIndex`.
+        ///
+        /// Note: The root model is not included here; it is available via `rootModel`.
         public let models: [Model]
+
+        /// The deduplicated meshes referenced by items/components.
+        ///
+        /// Each mesh has a stable `modelIndex` that points back to an entry in `models`.
         public let meshes: [LoadedMesh]
+
+        /// The build items from the root model, expanded into concrete components referencing meshes.
         public let items: [LoadedItem]
 
+        /// A mesh paired with the index of the model it came from.
         public struct LoadedMesh: Sendable {
+            /// The mesh geometry.
             public let mesh: Mesh
+
+            /// The index of the model in `LoadedModel.models` that contains this mesh.
             public let modelIndex: Int
         }
 
+        /// An item from the root model with its resolved components.
         public struct LoadedItem: Sendable {
+            /// The original item from the root model's build.
             public let item: Item
+
+            /// The object referenced by `item`, as defined in the corresponding model.
             public let rootObject: Object
+
+            /// The concrete components of this item, each referencing a mesh and carrying transforms and metadata.
             public let components: [LoadedComponent]
         }
 
+        /// A concrete component that references a mesh and carries transforms, properties, and metadata.
         public struct LoadedComponent: Sendable {
+            /// The index into `LoadedModel.meshes` for the referenced mesh.
             public let meshIndex: Int
+
+            /// The transforms to apply to the mesh, in order from parent to child.
             public let transforms: [Matrix3D]
+
+            /// The property group identifier, if any, associated with this component.
             public let propertyGroupID: ResourceID?
+
+            /// The property index within the property group, if any.
             public let propertyIndex: ResourceIndex?
+
+            /// The accumulated names along the reference path, from parent to child.
             public var names: [String]
+
+            /// The accumulated part numbers along the reference path, from parent to child.
             public var partNumbers: [String]
         }
     }
