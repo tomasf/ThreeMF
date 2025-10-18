@@ -10,6 +10,10 @@ public struct Object: Resource {
     public var thumbnail: URL?
     public var partNumber: String?
     public var name: String?
+    public var uuid: UUID?
+
+    public var modelResolution: ModelResolution?
+    public var alternatives: [Alternative]
 
     public var propertyGroupID: ResourceID?
     public var propertyIndex: ResourceIndex?
@@ -23,6 +27,9 @@ public struct Object: Resource {
         thumbnail: URL? = nil,
         partNumber: String? = nil,
         name: String? = nil,
+        uuid: UUID? = nil,
+        modelResolution: ModelResolution? = nil,
+        alternatives: [Alternative] = [],
         propertyGroupID: ResourceID? = nil,
         propertyIndex: ResourceIndex? = nil,
         metadata: [Metadata] = [],
@@ -33,6 +40,10 @@ public struct Object: Resource {
         self.thumbnail = thumbnail
         self.partNumber = partNumber
         self.name = name
+        self.uuid = uuid
+
+        self.modelResolution = modelResolution
+        self.alternatives = alternatives
 
         self.propertyGroupID = propertyGroupID
         self.propertyIndex = propertyIndex
@@ -49,6 +60,11 @@ extension Object: XMLElementCodable {
         element.setValue(thumbnail, forAttribute: .thumbnail)
         element.setValue(partNumber, forAttribute: .partNumber)
         element.setValue(name, forAttribute: .name)
+        element.setValue(uuid ?? .uuidIfProduction, forAttribute: Production.UUID)
+
+        element.setValue(modelResolution, forAttribute: Alternatives.modelResolution)
+        element.encode(alternatives, elementName: Alternatives.alternative, containedIn: Alternatives.alternatives)
+
         element.setValue(propertyGroupID, forAttribute: .pid)
         element.setValue(propertyIndex, forAttribute: .pIndex)
         element.encode(metadata, elementName: Core.metadata)
@@ -63,6 +79,11 @@ extension Object: XMLElementCodable {
         thumbnail = try element.value(forAttribute: .thumbnail)
         partNumber = try element.value(forAttribute: .partNumber)
         name = try element.value(forAttribute: .name)
+        uuid = try element.value(forAttribute: Production.UUID)
+
+        modelResolution = try element.value(forAttribute: Alternatives.modelResolution)
+        alternatives = try element.decode(elementName: Alternatives.alternative, containedIn: Alternatives.alternatives)
+
         propertyGroupID = try element.value(forAttribute: .pid)
         propertyIndex = try element.value(forAttribute: .pIndex)
         metadata = try element.decode(elementName: Core.metadata)
@@ -72,20 +93,6 @@ extension Object: XMLElementCodable {
         }
         content = try .init(from: contentElement)
     }
-}
-
-extension URL: XMLValueCodable {
-    public var xmlStringValue: String {
-        relativePath
-    }
-
-    public init(xmlStringValue string: String) throws {
-        guard let url = URL(string: string) else {
-            throw XMLValueError.invalidFormat(expected: "URI", found: string)
-        }
-        self = url
-    }
-
 }
 
 public extension Object {

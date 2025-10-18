@@ -85,4 +85,7 @@ extension AttributeName where Self == ExpandedName {
     static var startIndex: Self { attribute("startindex") }
     static var endIndex: Self { attribute("endindex") }
     static var identifier: Self { attribute("identifier") }
+
+    // MARK: - Alternatives
+    static var modelResolution: Self { attribute("modelresolution") }
 }

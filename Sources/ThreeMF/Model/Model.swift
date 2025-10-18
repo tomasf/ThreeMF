@@ -1,6 +1,14 @@
 import Foundation
 import Nodal
 
+@TaskLocal internal var requiredExtensions: Set<Namespace> = []
+
+internal extension UUID {
+    static var uuidIfProduction: UUID? {
+        requiredExtensions.contains(.production) ? UUID() : nil
+    }
+}
+
 public struct Model: Sendable, XMLElementCodable {
     public var unit: Unit?
     public var xmlLanguageCode: String?
@@ -12,7 +20,30 @@ public struct Model: Sendable, XMLElementCodable {
 
     public var metadata: [Metadata]
     public var resources: ResourceContainer
-    public var buildItems: [Item]
+    public var build: Build
+
+    public init(
+        unit: Unit? = nil,
+        xmlLanguageCode: String? = nil,
+        languageCode: String? = nil,
+        requiredExtensions: Set<Namespace> = [],
+        recommendedExtensions: Set<Namespace> = [],
+        customNamespaces: [String: String] = [:], // Prefix: URI
+        metadata: [Metadata] = [],
+        resources: [any Resource] = [],
+        build: Build
+    ) {
+        self.unit = unit
+        self.xmlLanguageCode = xmlLanguageCode
+        self.languageCode = languageCode
+        self.requiredExtensions = requiredExtensions
+        self.recommendedExtensions = recommendedExtensions
+        self.customNamespaces = customNamespaces
+
+        self.metadata = metadata
+        self.resources = ResourceContainer(resources: resources)
+        self.build = build
+    }
 
     public init(
         unit: Unit? = nil,
@@ -25,27 +56,21 @@ public struct Model: Sendable, XMLElementCodable {
         resources: [any Resource] = [],
         buildItems: [Item] = []
     ) {
-        self.unit = unit
-        self.xmlLanguageCode = xmlLanguageCode
-        self.languageCode = languageCode
-        self.requiredExtensions = requiredExtensions
-        self.recommendedExtensions = recommendedExtensions
-        self.customNamespaces = customNamespaces
-
-        self.metadata = metadata
-        self.resources = ResourceContainer(resources: resources)
-        self.buildItems = buildItems
+        let build = Build(items: buildItems)
+        self.init(unit: unit, xmlLanguageCode: xmlLanguageCode, languageCode: languageCode, requiredExtensions: requiredExtensions, recommendedExtensions: recommendedExtensions, customNamespaces: customNamespaces, metadata: metadata, resources: resources, build: build)
     }
 
     public func encode(to element: Node) {
-        element.setValue(unit, forAttribute: .unit)
-        element.setValue(xmlLanguageCode, forAttribute: XML.lang)
-        element.setValue(languageCode, forAttribute: .language)
-        element.setValue(requiredExtensions.compactMap(\.outputPrefix).nonEmpty, forAttribute: .requiredExtensions)
-        element.setValue(recommendedExtensions.compactMap(\.outputPrefix).nonEmpty, forAttribute: .recommendedExtensions)
-        element.encode(metadata, elementName: Core.metadata)
-        element.encode(resources, elementName: Core.resources)
-        element.encode(buildItems, elementName: Core.item, containedIn: Core.build)
+        $requiredExtensions.withValue(requiredExtensions) {
+            element.setValue(unit, forAttribute: .unit)
+            element.setValue(xmlLanguageCode, forAttribute: XML.lang)
+            element.setValue(languageCode, forAttribute: .language)
+            element.setValue(requiredExtensions.compactMap(\.outputPrefix).nonEmpty, forAttribute: .requiredExtensions)
+            element.setValue(recommendedExtensions.compactMap(\.outputPrefix).nonEmpty, forAttribute: .recommendedExtensions)
+            element.encode(metadata, elementName: Core.metadata)
+            element.encode(resources, elementName: Core.resources)
+            element.encode(build, elementName: Core.build)
+        }
     }
 
     public init(from element: Node) throws {
@@ -70,6 +95,6 @@ public struct Model: Sendable, XMLElementCodable {
 
         metadata = try element.decode(elementName: Core.metadata)
         resources = try element.decode(elementName: Core.resources)
-        buildItems = try element.decode(elementName: Core.item, containedIn: Core.build)
+        build = try element.decode(elementName: Core.build)
     }
 }
