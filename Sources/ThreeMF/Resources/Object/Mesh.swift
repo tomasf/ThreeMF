@@ -14,9 +14,9 @@ public struct Mesh: Sendable, XMLElementCodable {
 
     public func encode(to element: Node) {
         // Use qualified names here as an optimization. We're producing output and have full control.
-        element.encode(vertices, elementName: Core.vertex.localName, containedIn: Core.vertices)
-        element.encode(triangles, elementName: Core.triangle.localName, containedIn: Core.triangles)
-        element.encode(triangleSets, elementName: TriangleSets.triangleSet.localName, containedIn: TriangleSets.triangleSets)
+        element.encode(vertices, elementName: Core.vertex.localName, containedIn: Core.vertices.localName)
+        element.encode(triangles, elementName: Core.triangle.localName, containedIn: Core.triangles.localName)
+        element.encode(triangleSets, elementName: TriangleSets.triangleSet.localName, containedIn: TriangleSets.triangleSets.localName)
     }
 
     public init(from element: Node) throws {

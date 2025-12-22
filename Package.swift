@@ -9,8 +9,8 @@ let package = Package(
         .library(name: "ThreeMF", targets: ["ThreeMF"])
     ],
     dependencies: [
-        .package(url: "https://github.com/tomasf/Zip.git", from: "2.1.0"),
-        .package(url: "https://github.com/tomasf/Nodal.git", from: "0.3.2")
+        .package(url: "https://github.com/tomasf/Zip.git", from: "2.1.1"),
+        .package(url: "https://github.com/tomasf/Nodal.git", from: "0.4.0")
     ],
     targets: [
         .target(
