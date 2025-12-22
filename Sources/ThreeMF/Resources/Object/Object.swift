@@ -89,7 +89,7 @@ extension Object: XMLElementCodable {
         metadata = try element.decode(elementName: Core.metadata)
 
         guard let contentElement = element[element: Core.mesh] ?? element[element: Core.components] else {
-            throw XMLElementCodableError.elementMissing(Core.mesh)
+            throw XMLElementCodableError.expandedElementMissing(Core.mesh)
         }
         content = try .init(from: contentElement)
     }
