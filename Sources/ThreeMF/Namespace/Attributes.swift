@@ -1,7 +1,7 @@
 import Foundation
 import Nodal
 
-extension AttributeName where Self == ExpandedName {
+extension ExpandedName {
     static private func attribute(_ localName: String) -> ExpandedName {
         ExpandedName(namespaceName: nil, localName: localName)
     }

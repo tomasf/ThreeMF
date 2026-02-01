@@ -23,7 +23,7 @@ public extension Color {
 }
 
 extension Color: XMLValueCodable {
-    public init(xmlStringValue hexString: String) throws {
+    public init(xmlStringValue hexString: String, for node: Node) throws {
         guard hexString.hasPrefix("#") else {
             throw XMLValueError.invalidFormat(expected: "Color", found: hexString)
         }
@@ -48,7 +48,7 @@ extension Color: XMLValueCodable {
         blue = UInt8(number >> 0 & 0xFF)
     }
 
-    public var xmlStringValue: String {
+    public func xmlStringValue(for node: Node) -> String {
         if alpha == 0xFF {
             String(format: "#%02x%02x%02x", red, green, blue)
         } else {

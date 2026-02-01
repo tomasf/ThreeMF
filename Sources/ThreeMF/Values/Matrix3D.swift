@@ -12,13 +12,13 @@ public struct Matrix3D: Sendable, XMLValueCodable {
         self.values = values
     }
 
-    public init(xmlStringValue string: String) throws {
+    public init(xmlStringValue string: String, for node: Node) throws {
         let flatValues = string.split(separator: " ").compactMap(Double.init)
         guard flatValues.count == 12 else { throw XMLValueError.invalidFormat(expected: "Transform (12 doubles)", found: string) }
         values = (0..<4).map { Array(flatValues[($0 * 3)..<(($0 + 1) * 3)]) }
     }
 
-    public var xmlStringValue: String {
+    public func xmlStringValue(for node: Node) -> String {
         values.map { String(format: "%g %g %g", $0[0], $0[1], $0[2]) }.joined(separator: " ")
     }
 }

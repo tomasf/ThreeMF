@@ -27,7 +27,7 @@ public struct Metadata: Sendable, XMLElementCodable {
         case application
         case custom (String)
 
-        public var xmlStringValue: String {
+        public func xmlStringValue(for node: Node) -> String {
             switch self {
             case .title: "Title"
             case .designer: "Designer"
@@ -42,9 +42,9 @@ public struct Metadata: Sendable, XMLElementCodable {
             }
         }
 
-        public init(xmlStringValue string: String) {
+        public init(xmlStringValue string: String, for node: Node) throws {
             let wellknown: [Self] = [.title, .designer, .description, .copyright, .licenseTerms, .rating, .creationDate, .modificationDate, .application]
-            if let match = wellknown.first(where: { $0.xmlStringValue == string }) {
+            if let match = wellknown.first(where: { $0.xmlStringValue(for: node) == string }) {
                 self = match
             } else {
                 self = .custom(string)

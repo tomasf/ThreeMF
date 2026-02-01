@@ -37,15 +37,3 @@ extension Collection where Element: Sendable {
     }
 }
 
-extension URL: XMLValueCodable {
-    public var xmlStringValue: String {
-        relativePath
-    }
-
-    public init(xmlStringValue string: String) throws {
-        guard let url = URL(string: string) else {
-            throw XMLValueError.invalidFormat(expected: "URI", found: string)
-        }
-        self = url
-    }
-}
