@@ -14,9 +14,9 @@ public extension Mesh {
         }
 
         public func encode(to element: Node) {
-            element.setValue(x, forAttribute: .x)
-            element.setValue(y, forAttribute: .y)
-            element.setValue(z, forAttribute: .z)
+            element.appendValue(x.compactXMLString, forAttribute: "x")
+            element.appendValue(y.compactXMLString, forAttribute: "y")
+            element.appendValue(z.compactXMLString, forAttribute: "z")
         }
 
         public init(from element: Node) throws {

@@ -238,7 +238,7 @@ internal extension PackageWriter {
             contentType: MimeType.model.rawValue,
             relationshipType: RelationshipType.model.rawValue,
         ) {
-            try Self.xmlDocument(for: model).xmlData()
+            try Self.xmlDocument(for: model).xmlData(options: .raw)
         }
 
         let additionalModelFiles = try additionalModels.map { name, model in
@@ -251,7 +251,7 @@ internal extension PackageWriter {
                 relationshipType: RelationshipType.model.rawValue,
                 relativeToRootModel: true
             ) {
-                try Self.xmlDocument(for: model).xmlData()
+                try Self.xmlDocument(for: model).xmlData(options: .raw)
             }
         }
 

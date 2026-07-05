@@ -13,9 +13,23 @@ public struct Mesh: Sendable, XMLElementCodable {
     }
 
     public func encode(to element: Node) {
-        // Use qualified names here as an optimization. We're producing output and have full control.
-        element.encode(vertices, elementName: Core.vertex.localName, containedIn: Core.vertices.localName)
-        element.encode(triangles, elementName: Core.triangle.localName, containedIn: Core.triangles.localName)
+        // Use qualified names and concrete loops here as an optimization.
+        // We're producing output and have full control, and this is by far
+        // the hottest encoding path for typical models.
+        if !vertices.isEmpty {
+            let container = element.addElement(Core.vertices.localName)
+            let elementName = Core.vertex.localName
+            for vertex in vertices {
+                vertex.encode(to: container.addElement(elementName))
+            }
+        }
+        if !triangles.isEmpty {
+            let container = element.addElement(Core.triangles.localName)
+            let elementName = Core.triangle.localName
+            for triangle in triangles {
+                triangle.encode(to: container.addElement(elementName))
+            }
+        }
         element.encode(triangleSets, elementName: TriangleSets.triangleSet.localName, containedIn: TriangleSets.triangleSets.localName)
     }
 

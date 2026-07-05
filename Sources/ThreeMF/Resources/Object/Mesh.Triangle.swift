@@ -19,11 +19,13 @@ public extension Mesh {
         }
 
         public func encode(to element: Node) {
-            element.setValue(v1, forAttribute: .v1)
-            element.setValue(v2, forAttribute: .v2)
-            element.setValue(v3, forAttribute: .v3)
+            element.appendValue(String(v1), forAttribute: "v1")
+            element.appendValue(String(v2), forAttribute: "v2")
+            element.appendValue(String(v3), forAttribute: "v3")
             propertyIndex?.encode(to: element)
-            element.setValue(propertyGroup, forAttribute: .pid)
+            if let propertyGroup {
+                element.appendValue(String(propertyGroup), forAttribute: "pid")
+            }
         }
 
         public init(from element: Node) throws {
@@ -90,12 +92,12 @@ extension Mesh.Triangle.Index {
     public func encode(to element: Node) {
         switch self {
         case .uniform (let index):
-            element.setValue(index, forAttribute: .p1)
+            element.appendValue(String(index), forAttribute: "p1")
 
         case .perVertex (let p1, let p2, let p3):
-            element.setValue(p1, forAttribute: .p1)
-            element.setValue(p2, forAttribute: .p2)
-            element.setValue(p3, forAttribute: .p3)
+            element.appendValue(String(p1), forAttribute: "p1")
+            element.appendValue(String(p2), forAttribute: "p2")
+            element.appendValue(String(p3), forAttribute: "p3")
         }
     }
 }
