@@ -205,16 +205,7 @@ struct PackageWriterReaderTests {
     // share all their logic with the Data variants above via the generic PackageWriter<Target>/
     // PackageReader<Target> — only init/finalize/invalidate differ per Target. --
 
-    // Known issue, not fixed as part of this test suite, and more severe than the other flagged
-    // issues: PackageWriter<URL>.finalize() calls writeMainFiles() but never calls
-    // writeMetaFiles() (unlike PackageWriter<Data>.finalize(), which calls both) — so a package
-    // written to disk via the file-based writer never gets "[Content_Types].xml" or "_rels/.rels"
-    // written at all. The result is a .3mf file that's unreadable by any 3MF reader, including this
-    // library's own PackageReader<URL>, confirmed directly below. This looks like the file-based
-    // write path is currently broken for real use. See PackageWriter.swift's
-    // extension PackageWriter<URL>'s finalize().
-    @Test(.disabled("Known issue: PackageWriter<URL>.finalize() never calls writeMetaFiles(), so files it writes are missing _rels/.rels and unreadable. See PackageWriter.swift's PackageWriter<URL>.finalize()."))
-    func `file-based writer and reader round trip through a real file on disk`() throws {
+    @Test func `file-based writer and reader round trip through a real file on disk`() throws {
         let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".3mf")
         defer { try? FileManager.default.removeItem(at: fileURL) }
 
@@ -225,21 +216,6 @@ struct PackageWriterReaderTests {
         let reader = try PackageReader<URL>(url: fileURL)
         let readModel = try reader.model()
         assertMatchesSample(readModel)
-        reader.invalidate()
-    }
-
-    @Test func `file-based writer currently produces a package missing its rels file`() throws {
-        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".3mf")
-        defer { try? FileManager.default.removeItem(at: fileURL) }
-
-        let writer = try PackageWriter<URL>(url: fileURL)
-        writer.model = sampleModel()
-        try writer.finalize()
-
-        let reader = try PackageReader<URL>(url: fileURL)
-        #expect(throws: ThreeMFError.self) {
-            _ = try reader.model()
-        }
         reader.invalidate()
     }
 }

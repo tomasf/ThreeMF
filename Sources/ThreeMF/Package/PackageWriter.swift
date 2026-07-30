@@ -48,6 +48,7 @@ public extension PackageWriter<URL> {
     /// - Throws: An error if writing or finalizing the archive fails.
     func finalize() throws {
         try writeMainFiles()
+        try writeMetaFiles()
         try archive.finalize()
     }
 }
