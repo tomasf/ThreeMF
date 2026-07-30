@@ -30,7 +30,10 @@ public struct Mesh: Sendable, XMLElementCodable {
                 triangle.encode(to: container.addElement(elementName))
             }
         }
-        element.encode(triangleSets, elementName: TriangleSets.triangleSet.localName, containedIn: TriangleSets.triangleSets.localName)
+        // Unlike vertices/triangles above, triangleSets belongs to the "t:" (TriangleSets)
+        // extension namespace, not the document's default namespace, so it needs the
+        // namespace-qualified encode path to come back out through the matching decode lookup.
+        element.encode(triangleSets, elementName: TriangleSets.triangleSet, containedIn: TriangleSets.triangleSets)
     }
 
     public init(from element: Node) throws {

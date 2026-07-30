@@ -4,17 +4,19 @@ import Nodal
 @testable import ThreeMF
 
 struct MeshTests {
-    // triangleSets round-tripping is covered separately in MeshTriangleSetTests.swift — it's
-    // currently broken (see the .disabled test there), so it's deliberately left out of this
-    // otherwise-passing round trip.
-    @Test func `mesh with vertices and triangles round trips`() throws {
+    // triangleSets get deeper, dedicated coverage in MeshTriangleSetTests.swift.
+    @Test func `mesh with vertices triangles and triangleSets round trips`() throws {
         let mesh = Mesh(
             vertices: [.init(x: 0, y: 0, z: 0), .init(x: 1, y: 0, z: 0), .init(x: 0, y: 1, z: 0)],
-            triangles: [.init(v1: 0, v2: 1, v3: 2, propertyIndex: nil)]
+            triangles: [.init(v1: 0, v2: 1, v3: 2, propertyIndex: nil)],
+            triangleSets: [Mesh.TriangleSet(name: "Set", identifier: "id1", triangleIndices: [0])]
         )
         let decoded = try roundTrip(mesh)
         #expect(decoded.vertices == mesh.vertices)
         #expect(decoded.triangles == mesh.triangles)
+        #expect(decoded.triangleSets.map(\.name) == ["Set"])
+        #expect(decoded.triangleSets.map(\.identifier) == ["id1"])
+        #expect(decoded.triangleSets.map(\.triangleIndices) == [IndexSet([0])])
     }
 
     // Distinguishes "container element omitted" from "container element present but empty" —
