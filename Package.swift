@@ -10,7 +10,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/tomasf/Zip.git", from: "2.1.2"),
-        .package(url: "https://github.com/tomasf/Nodal.git", from: "1.0.1")
+        .package(url: "https://github.com/tomasf/Nodal.git", from: "1.0.2")
     ],
     targets: [
         .target(
