@@ -22,7 +22,7 @@ public extension ResourceContainer {
         var mutable = resource
         mutable.id = nextFreeResourceID
         resources.append(mutable)
-        return resource.id
+        return mutable.id
     }
 }
 

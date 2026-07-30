@@ -57,23 +57,11 @@ struct ResourceContainerTests {
         #expect(container.nextFreeResourceID == 8)
     }
 
-    @Test func `add(resource:) stores the resource under the next free id`() {
-        var container = ResourceContainer(resources: [componentsObject(id: 5, [])])
-        _ = container.add(resource: componentsObject(id: 999, []))
-        #expect(container.resources.last?.id == 6)
-    }
-
-    // Known issue, not fixed as part of this test suite: add(resource:) correctly assigns
-    // nextFreeResourceID to the *stored* copy of the resource (verified above), but then returns
-    // `resource.id` — the original, unmutated parameter — instead of the id it actually assigned
-    // and stored. Any caller relying on the returned id to reference the resource it just added
-    // (e.g. to point a build Item at it) gets back the wrong id. See ResourceContainer.swift's
-    // add(resource:).
-    @Test(.disabled("Known issue: add(resource:) returns the original resource's id instead of the newly-assigned one. See ResourceContainer.swift's add(resource:)."))
-    func `add(resource:) returns the id it assigned`() {
+    @Test func `add(resource:) stores the resource under, and returns, the next free id`() {
         var container = ResourceContainer(resources: [componentsObject(id: 5, [])])
         let assignedID = container.add(resource: componentsObject(id: 999, []))
         #expect(assignedID == 6)
+        #expect(container.resources.last?.id == 6)
     }
 
     @Test func `resource(for:) returns nil for a missing id`() {
