@@ -77,12 +77,20 @@ internal extension Mesh.Triangle.Index {
 
 extension Mesh.Triangle.Index {
     public init?(from element: Node) {
-        guard let p1: ResourceIndex = try? element.value(forAttribute: .p1) else {
+        // Check attribute presence with the plain (non-throwing) accessor before decoding:
+        // p1/p2/p3 are absent on the vast majority of triangles (per-vertex property indices
+        // are a rarely-used feature), and routing that common "missing" case through the
+        // throwing `value(forAttribute:)` API means constructing and discarding a Swift error
+        // for essentially every triangle in a typical mesh.
+        guard element[attribute: .p1] != nil,
+              let p1: ResourceIndex = try? element.value(forAttribute: .p1)
+        else {
             return nil
         }
 
-        if let p2: ResourceIndex = try? element.value(forAttribute: .p1),
-           let p3: ResourceIndex = try? element.value(forAttribute: .p2) {
+        if element[attribute: .p2] != nil, element[attribute: .p3] != nil,
+           let p2: ResourceIndex = try? element.value(forAttribute: .p2),
+           let p3: ResourceIndex = try? element.value(forAttribute: .p3) {
             self = .perVertex(p1, p2, p3)
         } else {
             self = .uniform(p1)
