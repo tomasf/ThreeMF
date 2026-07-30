@@ -166,16 +166,7 @@ struct ModelLoaderTests {
         }
     }
 
-    // Known issue, not fixed as part of this test suite: ModelLoader.load()'s asyncMap over
-    // additional model paths only converts a caught `ZipError.fileNotFound` into
-    // `LoadingError.modelNotFoundInArchive`. But PackageReader.model(at:) never lets that error
-    // escape — it always catches it internally first and rethrows as
-    // `ThreeMFError.failedToReadArchiveFile` (see PackageReader.swift's modelRootElement(at:)).
-    // So a build item whose path points at a model that was never written to the package throws
-    // the underlying ThreeMFError directly; LoadingError.modelNotFoundInArchive can never actually
-    // be produced through this path. See ModelLoader.swift's load().
-    @Test(.disabled("Known issue: LoadingError.modelNotFoundInArchive is unreachable — PackageReader.model(at:) never lets the ZipError ModelLoader looks for escape. See ModelLoader.swift's load()."))
-    func `a dangling model path throws modelNotFoundInArchive`() async throws {
+    @Test func `a dangling model path throws modelNotFoundInArchive`() async throws {
         var model = Model()
         model.build.items = [Item(objectID: 1, path: URL(string: "/3D/nonexistent.model")!)]
 
@@ -188,19 +179,6 @@ struct ModelLoaderTests {
         } throws: { error in
             guard case ModelLoader<Data>.LoadingError.modelNotFoundInArchive(let path) = error else { return false }
             return path == URL(string: "/3D/nonexistent.model")!
-        }
-    }
-
-    @Test func `a dangling model path currently throws the underlying ThreeMFError instead`() async throws {
-        var model = Model()
-        model.build.items = [Item(objectID: 1, path: URL(string: "/3D/nonexistent.model")!)]
-
-        let writer = PackageWriter<Data>()
-        writer.model = model
-        let data = try await writer.finalize()
-
-        await #expect(throws: ThreeMFError.self) {
-            _ = try await ModelLoader<Data>(data: data).load()
         }
     }
 }

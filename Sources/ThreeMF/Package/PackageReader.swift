@@ -61,8 +61,16 @@ internal extension PackageReader {
     func modelRootElement(at path: URL?) throws(ThreeMFError) -> Node {
         let resolvedPath = if let path { path } else { try startPartURL() }
 
-        guard let modelData = try? readFile(at: resolvedPath) else {
-            throw .failedToReadArchiveFile(name: resolvedPath.relativePath, error: nil)
+        let modelData: Data
+        do {
+            guard let data = try readFile(at: resolvedPath) else {
+                throw ThreeMFError.failedToReadArchiveFile(name: resolvedPath.relativePath, error: nil)
+            }
+            modelData = data
+        } catch let error as ThreeMFError {
+            throw error
+        } catch {
+            throw .failedToReadArchiveFile(name: resolvedPath.relativePath, error: error)
         }
 
         let modelDocument: Document

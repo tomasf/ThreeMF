@@ -75,7 +75,10 @@ public struct ModelLoader<Source: Sendable> {
         let additionalModels = try await additionalModelPaths.asyncMap {
             do {
                 return ($0, try makeReader().model(at: $0))
-            } catch ZipError.fileNotFound {
+            } catch ThreeMFError.failedToReadArchiveFile(_, let underlyingError) where (underlyingError as? ZipError) == .fileNotFound {
+                // PackageReader.model(at:) never lets a raw ZipError escape — it always wraps
+                // read failures as ThreeMFError.failedToReadArchiveFile first — so this has to
+                // match against that wrapper, not a bare ZipError.fileNotFound.
                 throw LoadingError.modelNotFoundInArchive(path: $0)
             }
         }
