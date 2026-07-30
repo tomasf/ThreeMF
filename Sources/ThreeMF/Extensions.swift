@@ -19,9 +19,7 @@ internal extension Collection {
 
 internal extension Double {
     /// Prints integral values without a decimal point or exponent, avoiding needless bytes for
-    /// the mesh coordinates and indices that land on whole numbers; other values fall back to
-    /// Double's normal shortest round-trip representation, since mesh coordinates are genuinely
-    /// double-precision (Manifold computes in `double` internally) and rarely simplify further.
+    /// the mesh coordinates and indices that land on whole numbers
     var compactXMLString: String {
         if let integer = Int64(exactly: self) {
             return String(integer)
