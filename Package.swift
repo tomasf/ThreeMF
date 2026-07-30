@@ -17,6 +17,11 @@ let package = Package(
             name: "ThreeMF",
             dependencies: ["Zip", "Nodal"],
             swiftSettings: [.interoperabilityMode(.Cxx)]
+        ),
+        .testTarget(
+            name: "Tests",
+            dependencies: ["ThreeMF", "Zip", "Nodal"],
+            swiftSettings: [.interoperabilityMode(.Cxx)]
         )
     ]
 )
