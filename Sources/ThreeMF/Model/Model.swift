@@ -91,7 +91,7 @@ public struct Model: Sendable, XMLElementCodable {
         }
 
         let knownNamespaces = Set(Namespace.known.map(\.uri))
-        customNamespaces = element.declaredNamespaces.filter { $0 != nil && knownNamespaces.contains($1) } as! [String: String]
+        customNamespaces = element.declaredNamespaces.filter { $0 != nil && !knownNamespaces.contains($1) } as! [String: String]
 
         metadata = try element.decode(elementName: Core.metadata)
         resources = try element.decode(elementName: Core.resources)

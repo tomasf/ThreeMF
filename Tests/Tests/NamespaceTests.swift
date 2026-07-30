@@ -26,6 +26,8 @@ struct NamespaceTests {
         let readModel = try reader.model()
         #expect(readModel.requiredExtensions == [.production])
         #expect(readModel.recommendedExtensions == [.materials])
+        // Known (built-in) namespaces like these shouldn't show up as "custom" ones.
+        #expect(readModel.customNamespaces.isEmpty)
     }
 
     @Test(arguments: [
@@ -40,15 +42,7 @@ struct NamespaceTests {
         #expect(try roundTrip(resolution) == resolution)
     }
 
-    // Known issue, not fixed as part of this test suite: Model.init(from:)'s customNamespaces
-    // filter keeps declared namespaces whose URI *is* in Namespace.known, which is backwards for a
-    // field documented as `// Prefix: URI` custom namespaces (Model.swift). A genuinely custom/
-    // vendor namespace — the only kind this field is meant to capture — has a URI that's never in
-    // Namespace.known, so it's filtered *out*, and customNamespaces always decodes empty. Confirmed
-    // directly: writing a Model with customNamespaces = ["ext": "http://example.com/custom"]
-    // through PackageWriter<Data>/PackageReader<Data> comes back with customNamespaces == [:].
-    @Test(.disabled("Known issue: Model.customNamespaces' decode filter keeps known namespaces instead of custom ones. See Model.swift's init(from:)."))
-    func `custom namespaces round trip through a full package`() async throws {
+    @Test func `custom namespaces round trip through a full package`() async throws {
         var model = Model()
         model.customNamespaces = ["ext": "http://example.com/custom"]
 
