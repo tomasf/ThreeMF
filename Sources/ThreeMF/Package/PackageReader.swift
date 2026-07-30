@@ -107,6 +107,10 @@ public extension PackageReader {
         if filePath.hasPrefix("/") {
             filePath.removeFirst()
         }
-        return try archive.fileContents(at: filePath)
+        do {
+            return try archive.fileContents(at: filePath)
+        } catch ZipError.fileNotFound {
+            return nil
+        }
     }
 }

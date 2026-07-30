@@ -105,27 +105,12 @@ struct PackageWriterReaderTests {
         #expect(try reader.readFile(at: thumbnailURL) == thumbnailData)
     }
 
-    // Known issue, not fixed as part of this test suite: readFile(at:)'s doc comment says it
-    // returns nil for a file that isn't in the package, but the implementation forwards straight
-    // to Zip's archive.fileContents(at:) with no try?, which throws ZipError.fileNotFound instead
-    // of returning nil. See PackageReader.swift's readFile(at:).
-    @Test(.disabled("Known issue: readFile(at:) is documented to return nil for a missing file but actually throws. See PackageReader.swift's readFile(at:)."))
-    func `readFile returns nil for a file that was never added`() throws {
+    @Test func `readFile returns nil for a file that was never added`() throws {
         let writer = PackageWriter<Data>()
         writer.model = Model(build: Build(items: []))
         let data = try writer.finalize()
         let reader = try PackageReader<Data>(data: data)
         #expect(try reader.readFile(at: URL(string: "/never/added")!) == nil)
-    }
-
-    @Test func `readFile actually throws for a file that was never added`() throws {
-        let writer = PackageWriter<Data>()
-        writer.model = Model(build: Build(items: []))
-        let data = try writer.finalize()
-        let reader = try PackageReader<Data>(data: data)
-        #expect(throws: ZipError.self) {
-            _ = try reader.readFile(at: URL(string: "/never/added")!)
-        }
     }
 
     // -- Malformed packages, built directly with Zip since PackageWriter can't produce these --
