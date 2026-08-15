@@ -112,17 +112,8 @@ public extension PackageWriter {
         relativeToRootModel: Bool = false,
         data: Data
     ) {
-        if let mimeType {
-            contentTypes.add(mimeType: mimeType, for: url)
-        }
-        if let relationshipType {
-            if relativeToRootModel {
-                modelFileRelationships.add(target: url, type: relationshipType)
-            } else {
-                relationships.add(target: url, type: relationshipType)
-            }
-        }
-        stagedFiles[normalizedPath(for: url)] = data
+        register(url: url, contentType: mimeType, relationshipType: relationshipType, relativeToRootModel: relativeToRootModel)
+        stagedFiles[url.packagePartPath] = data
     }
 
     /// Reads the current staged contents of a file at the given URL, or `nil` if nothing is there.
@@ -138,7 +129,7 @@ public extension PackageWriter {
     /// - Throws: An error if a model needs to be serialized to satisfy this read and that fails.
     func fileContents(at url: URL) throws -> Data? {
         try stageModelFilesIfNeeded()
-        return stagedFiles[normalizedPath(for: url)]
+        return stagedFiles[url.packagePartPath]
     }
 
     /// Adds a texture to the package and returns its assigned URL.
@@ -200,17 +191,26 @@ internal extension PackageWriter {
     // Cura is sadly hard-coded to always read this file name, so keep it for compatibility
     static var rootModelURL: URL { URL(string: "/3D/3dmodel.model")! }
 
-    func normalizedPath(for url: URL) -> String {
-        var path = url.relativePath
-        if path.hasPrefix("/") {
-            path.removeFirst()
+    // Records a file's content type and relationship without staging any bytes for it. Kept separate
+    // from addFile so the model files can be registered even when their bytes are already staged.
+    func register(url: URL, contentType mimeType: String?, relationshipType: String?, relativeToRootModel: Bool) {
+        if let mimeType {
+            contentTypes.add(mimeType: mimeType, for: url)
         }
-        return path
+        if let relationshipType {
+            if relativeToRootModel {
+                modelFileRelationships.add(target: url, type: relationshipType)
+            } else {
+                relationships.add(target: url, type: relationshipType)
+            }
+        }
     }
 
     func addNumberedFile(base: String, contentType mimeType: String, relationshipType: String, data: Data) -> URL {
         let existingCount = relationships.count(ofType: relationshipType)
-        guard let uri = URL(string: "\(base)\(existingCount + 1)") else {
+        // Absolute, like every other part this writer names: the URL is handed back to the caller to
+        // reference from the model, and it's what the content type override is written from.
+        guard let uri = URL(string: "/\(base)\(existingCount + 1)") else {
             fatalError("Failed to create numbered URL")
         }
         addFile(at: uri, contentType: mimeType, relationshipType: relationshipType, data: data)
@@ -232,32 +232,36 @@ internal extension PackageWriter {
     // already read via `fileContents(at:)` or overwritten via `addFile`). Safe to call repeatedly —
     // already-staged paths are left untouched, so anything staged with different content stays that way.
     func stageModelFilesIfNeeded() throws {
-        for entry in modelFileEntries where stagedFiles[normalizedPath(for: entry.url)] == nil {
-            let data = try entry.model.xmlDocument().xmlData(options: .raw)
-            addFile(
-                at: entry.url,
+        registerModelFiles()
+        for entry in modelFileEntries where stagedFiles[entry.url.packagePartPath] == nil {
+            stagedFiles[entry.url.packagePartPath] = try entry.model.xmlDocument().xmlData(options: .raw)
+        }
+    }
+
+    // A model's content type and relationship have to be recorded even when its bytes are already
+    // staged: a caller can write a model file's raw XML with addFile before anything serializes it,
+    // and skipping registration for it would leave the package with no model relationship at all,
+    // which makes it unreadable.
+    func registerModelFiles() {
+        for entry in modelFileEntries {
+            register(
+                url: entry.url,
                 contentType: MimeType.model.rawValue,
                 relationshipType: RelationshipType.model.rawValue,
-                relativeToRootModel: entry.relativeToRootModel,
-                data: data
+                relativeToRootModel: entry.relativeToRootModel
             )
         }
     }
 
     // Same as the synchronous version, but serializes any not-yet-staged models concurrently.
     func stageModelFilesIfNeededConcurrently() async throws {
-        let pending = modelFileEntries.filter { stagedFiles[normalizedPath(for: $0.url)] == nil }
+        registerModelFiles()
+        let pending = modelFileEntries.filter { stagedFiles[$0.url.packagePartPath] == nil }
         let staged = try await pending.asyncMap { entry in
             try (entry: entry, data: entry.model.xmlDocument().xmlData(options: .raw))
         }
         for (entry, data) in staged {
-            addFile(
-                at: entry.url,
-                contentType: MimeType.model.rawValue,
-                relationshipType: RelationshipType.model.rawValue,
-                relativeToRootModel: entry.relativeToRootModel,
-                data: data
-            )
+            stagedFiles[entry.url.packagePartPath] = data
         }
     }
 
@@ -266,10 +270,10 @@ internal extension PackageWriter {
             fatalError("Failed to initialize model URL")
         }
 
-        try archive.addFile(at: normalizedPath(for: ContentTypes.archiveFileURL), data: contentTypes.xmlDocument().xmlData(), compression: compressionLevel)
-        try archive.addFile(at: normalizedPath(for: Relationships.archiveFileURL), data: relationships.xmlDocument().xmlData(), compression: compressionLevel)
+        try archive.addFile(at: ContentTypes.archiveFileURL.packagePartPath, data: contentTypes.xmlDocument().xmlData(), compression: compressionLevel)
+        try archive.addFile(at: Relationships.archiveFileURL.packagePartPath, data: relationships.xmlDocument().xmlData(), compression: compressionLevel)
         if !modelFileRelationships.isEmpty {
-            try archive.addFile(at: normalizedPath(for: modelRelationshipsURL), data: modelFileRelationships.xmlDocument().xmlData(), compression: compressionLevel)
+            try archive.addFile(at: modelRelationshipsURL.packagePartPath, data: modelFileRelationships.xmlDocument().xmlData(), compression: compressionLevel)
         }
     }
 

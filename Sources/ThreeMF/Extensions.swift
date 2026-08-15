@@ -28,6 +28,30 @@ internal extension Double {
     }
 }
 
+internal extension URL {
+    /// Identifies a part within a package: the path with any leading slash removed, which is also
+    /// the form the ZIP archive keys its entries by.
+    ///
+    /// `/3D/3dmodel.model` and `3D/3dmodel.model` name the same part, so anything that decides
+    /// whether two URLs refer to the same file — staged files, content types, relationships — has
+    /// to compare this rather than the URLs themselves.
+    var packagePartPath: String {
+        var path = relativePath
+        if path.hasPrefix("/") {
+            path.removeFirst()
+        }
+        return path
+    }
+
+    /// The OPC part name for this URL: the part path made absolute.
+    ///
+    /// Part names are required to start with a slash, so this is the form content type overrides
+    /// have to be written in, whichever way the URL that named the part was spelled.
+    var packagePartName: String {
+        "/" + packagePartPath
+    }
+}
+
 extension Collection where Element: Sendable {
     func asyncMap<T: Sendable>(_ transform: @Sendable @escaping (Element) async throws -> T) async rethrows -> [T] {
         try await withThrowingTaskGroup(of: (Int, T).self) { group in

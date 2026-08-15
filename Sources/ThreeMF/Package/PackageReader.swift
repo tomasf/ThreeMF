@@ -103,12 +103,8 @@ public extension PackageReader {
     /// - Returns: The file data if present, or `nil` if the file cannot be found.
     /// - Throws: An error if the archive cannot be read.
     func readFile(at url: URL) throws -> Data? {
-        var filePath = url.path
-        if filePath.hasPrefix("/") {
-            filePath.removeFirst()
-        }
         do {
-            return try archive.fileContents(at: filePath)
+            return try archive.fileContents(at: url.packagePartPath)
         } catch ZipError.fileNotFound {
             return nil
         }

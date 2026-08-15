@@ -105,6 +105,28 @@ struct PackageWriterReaderTests {
         #expect(try reader.readFile(at: thumbnailURL) == thumbnailData)
     }
 
+    @Test func `content type part names are absolute whichever way the part was named`() throws {
+        // OPC part names have to start with a slash, so what the caller passed — or what the
+        // automatic numbering produced — can't be written through verbatim.
+        let writer = PackageWriter<Data>()
+        writer.model = Model(build: Build(items: []))
+
+        let textureURL = writer.addTexture(data: Data("texture".utf8))
+        #expect(textureURL.relativePath.hasPrefix("/"))
+        writer.addFile(at: URL(string: "Metadata/relative.txt")!, contentType: "text/plain", relationshipType: nil, data: Data("x".utf8))
+
+        let data = try writer.finalize()
+        let reader = try PackageReader<Data>(data: data)
+        let contentTypesData = try #require(try reader.readFile(at: URL(string: "/[Content_Types].xml")!))
+        let partNames = try Document(data: contentTypesData).documentElement?[elements: "Override"].map {
+            $0[attribute: "PartName"] ?? ""
+        }
+
+        #expect(partNames?.contains("/Textures/Texture1") == true)
+        #expect(partNames?.contains("/Metadata/relative.txt") == true)
+        #expect(partNames?.allSatisfy { $0.hasPrefix("/") } == true)
+    }
+
     @Test func `readFile returns nil for a file that was never added`() throws {
         let writer = PackageWriter<Data>()
         writer.model = Model(build: Build(items: []))
@@ -227,6 +249,53 @@ struct PackageWriterReaderTests {
 
         #expect(ids.count == 3)
         #expect(Set(ids).count == ids.count)
+    }
+
+    @Test func `writing the root model's bytes without reading first still yields a readable package`() throws {
+        // Same raw-XML workflow as above, minus the fileContents() call that would incidentally
+        // register the model's relationship and content type on the way through.
+        let writer = PackageWriter<Data>()
+        writer.model = Model(build: Build(items: []))
+
+        let modelURL = URL(string: "/3D/3dmodel.model")!
+        let xml = try sampleModel().xmlDocument().xmlData()
+        writer.addFile(at: modelURL, contentType: nil, relationshipType: nil, data: xml)
+
+        let data = try writer.finalize()
+        let reader = try PackageReader<Data>(data: data)
+        assertMatchesSample(try reader.model())
+
+        let contentTypesData = try #require(try reader.readFile(at: URL(string: "/[Content_Types].xml")!))
+        let overrides = try Document(data: contentTypesData).documentElement?[elements: "Override"].filter {
+            $0[attribute: "PartName"] == modelURL.relativePath
+        }
+        #expect(overrides?.count == 1)
+    }
+
+    @Test func `the same part written with and without a leading slash is one file, one relationship and one override`() throws {
+        let writer = PackageWriter<Data>()
+        writer.model = Model(build: Build(items: []))
+
+        let absolute = URL(string: "/Metadata/a.txt")!
+        let relative = URL(string: "Metadata/a.txt")!
+        writer.addFile(at: absolute, contentType: "text/plain", relationshipType: "urn:test", data: Data("first".utf8))
+        writer.addFile(at: relative, contentType: "text/plain", relationshipType: "urn:test", data: Data("second".utf8))
+
+        let data = try writer.finalize()
+        let reader = try PackageReader<Data>(data: data)
+        #expect(try reader.readFile(at: absolute) == Data("second".utf8))
+
+        let relsData = try #require(try reader.readFile(at: URL(string: "/_rels/.rels")!))
+        let testRelationships = try Document(data: relsData).documentElement?[elements: "Relationship"].filter {
+            $0[attribute: "Type"] == "urn:test"
+        }
+        #expect(testRelationships?.count == 1)
+
+        let contentTypesData = try #require(try reader.readFile(at: URL(string: "/[Content_Types].xml")!))
+        let overrides = try Document(data: contentTypesData).documentElement?[elements: "Override"].filter {
+            $0[attribute: "ContentType"] == "text/plain"
+        }
+        #expect(overrides?.count == 1)
     }
 
     // -- Malformed packages, built directly with Zip since PackageWriter can't produce these --

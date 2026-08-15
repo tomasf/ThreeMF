@@ -8,7 +8,7 @@ internal struct Relationships: Sendable {
     internal init() {}
 
     mutating func add(id: String? = nil, target: URL, type: String) {
-        relationships.removeAll { $0.target == target }
+        relationships.removeAll { $0.target.packagePartPath == target.packagePartPath }
         relationships.append(Relationship(target: target, id: id ?? unusedID(), typeURI: type))
     }
 

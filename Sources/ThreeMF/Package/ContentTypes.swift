@@ -12,7 +12,7 @@ internal struct ContentTypes: Sendable {
     }
 
     mutating func add(mimeType: String, for part: URL) {
-        items.removeAll { if case .override(part, _) = $0 { true } else { false } }
+        items.removeAll { if case .override(let existingPart, _) = $0 { existingPart.packagePartPath == part.packagePartPath } else { false } }
         items.append(.override(part: part, mimeType: mimeType))
     }
 
@@ -35,7 +35,7 @@ extension ContentTypes {
                 child[attribute: "Extension"] = fileExtension
             case .override (let part, let mimeType):
                 let child = root.addElement("Override")
-                child[attribute: "PartName"] = part.relativePath
+                child[attribute: "PartName"] = part.packagePartName
                 child[attribute: "ContentType"] = mimeType
             }
         }
