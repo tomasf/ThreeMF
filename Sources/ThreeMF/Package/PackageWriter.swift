@@ -218,10 +218,12 @@ internal extension PackageWriter {
     }
 
     // The root model plus every registered additional model, with the path each is (or would be)
-    // staged at, and whether its relationship is relative to the root model file.
+    // staged at, and whether its relationship is relative to the root model file. Additional models
+    // come in name order rather than whatever order the dictionary happens to hash them into, so
+    // that the relationship IDs they're assigned don't shuffle between runs.
     var modelFileEntries: [(url: URL, model: Model, relativeToRootModel: Bool)] {
         var entries: [(url: URL, model: Model, relativeToRootModel: Bool)] = [(Self.rootModelURL, model, false)]
-        for (name, additionalModel) in additionalModels {
+        for (name, additionalModel) in additionalModels.sorted(by: { $0.key < $1.key }) {
             guard let modelURL = URL(string: "/3D/\(name).model") else { continue }
             entries.append((modelURL, additionalModel, true))
         }
@@ -279,14 +281,18 @@ internal extension PackageWriter {
 
     func writeMainFiles() throws {
         try stageModelFilesIfNeeded()
-        for (path, data) in stagedFiles {
-            try archive.addFile(at: path, data: data, compression: compressionLevel)
-        }
+        try writeStagedFiles()
     }
 
     func writeMainFiles() async throws {
         try await stageModelFilesIfNeededConcurrently()
-        for (path, data) in stagedFiles {
+        try writeStagedFiles()
+    }
+
+    // In path order, so that the same set of files always lands in the archive the same way instead
+    // of in the staging dictionary's hash order.
+    func writeStagedFiles() throws {
+        for (path, data) in stagedFiles.sorted(by: { $0.key < $1.key }) {
             try archive.addFile(at: path, data: data, compression: compressionLevel)
         }
     }

@@ -17,6 +17,49 @@ struct PackageWriterReaderTests {
         return model
     }
 
+    // Several additional models and a couple of loose files, all added in non-alphabetical order,
+    // plus the unordered collections that end up in the root model's XML: extension prefixes, custom
+    // namespaces and an item's custom attributes.
+    private func multiModelPackage() throws -> Data {
+        var rootModel = Model(build: Build(items: []))
+        // Two extensions each, to exercise the ordering of the prefix lists they're written as. Not
+        // the production extension, though: that mints a fresh UUID per serialization by design, so
+        // a model using it can't serialize identically twice in the first place.
+        rootModel.requiredExtensions = [.materials, .boolean, .slice]
+        rootModel.recommendedExtensions = [.mirroring, .triangleSets]
+        // Four of each, rather than the two it takes to show the bug: an unordered collection has to
+        // come out in exactly the sorted order to slip past, and four names make that unlikely enough
+        // that a regression doesn't need several runs to show up.
+        rootModel.customNamespaces = ["zed": "urn:zed", "ay": "urn:ay", "em": "urn:em", "queue": "urn:queue"]
+        rootModel.resources.resources = [ColorGroup(id: 1, colors: [.white]), meshObject(id: 2, name: "Part")]
+        rootModel.build.items = [Item(objectID: 2, customAttributes: [
+            ExpandedName(namespaceName: "urn:zed", localName: "fourth"): "4",
+            ExpandedName(namespaceName: "urn:queue", localName: "third"): "3",
+            ExpandedName(namespaceName: "urn:em", localName: "second"): "2",
+            ExpandedName(namespaceName: "urn:ay", localName: "first"): "1",
+        ])]
+
+        let writer = PackageWriter<Data>()
+        writer.model = rootModel
+        for name in ["gamma", "alpha", "epsilon", "beta", "delta"] {
+            var additionalModel = Model()
+            additionalModel.metadata = [Metadata(name: .title, value: name)]
+            _ = try writer.addAdditionalModel(additionalModel, named: name)
+        }
+        writer.addFile(at: URL(string: "/Metadata/z.txt")!, contentType: "text/plain", relationshipType: nil, data: Data("z".utf8))
+        writer.addFile(at: URL(string: "/Metadata/a.txt")!, contentType: "text/plain", relationshipType: nil, data: Data("a".utf8))
+        return try writer.finalize()
+    }
+
+    // Asserts that every substring is present, each one after the last.
+    private func assertOrder(of substrings: [String], in text: String) throws {
+        var remainder = Substring(text)
+        for substring in substrings {
+            let found = try #require(remainder.range(of: substring), "\(substring) is missing or out of order")
+            remainder = remainder[found.upperBound...]
+        }
+    }
+
     private func assertMatchesSample(_ model: Model) {
         #expect(model.unit == .centimeter)
         #expect(model.metadata.map(\.value) == ["A model"])
@@ -81,6 +124,54 @@ struct PackageWriterReaderTests {
         let reader = try PackageReader<Data>(data: data)
         #expect(try reader.model(at: firstURL).metadata.map(\.value) == ["First"])
         #expect(try reader.model(at: secondURL).metadata.map(\.value) == ["Second"])
+    }
+
+    @Test func `packages with several additional models are written deterministically`() throws {
+        // The model entries, the staged files and a model's namespace declarations were all walked
+        // in the order their dictionary or set happened to hash them into, so relationship IDs, the
+        // archive layout and the model XML itself varied from one run to the next. Comparing the
+        // whole archives byte for byte would drag in the entry timestamps, so this compares what the
+        // writer actually decides: the order of the entries and the bytes within each one.
+        let first = try multiModelPackage()
+        let second = try multiModelPackage()
+
+        let firstEntries = try ZipArchive(data: first).entries.map(\.path)
+        #expect(try firstEntries == ZipArchive(data: second).entries.map(\.path))
+        #expect(firstEntries == [
+            "3D/3dmodel.model", "3D/alpha.model", "3D/beta.model", "3D/delta.model", "3D/epsilon.model",
+            "3D/gamma.model", "Metadata/a.txt", "Metadata/z.txt", "[Content_Types].xml", "_rels/.rels",
+            "3D/_rels/3dmodel.model.rels",
+        ])
+
+        let firstReader = try PackageReader<Data>(data: first)
+        let secondReader = try PackageReader<Data>(data: second)
+        for path in firstEntries {
+            let url = URL(string: "/" + path)!
+            #expect(try firstReader.readFile(at: url) == secondReader.readFile(at: url), "\(path) differs")
+        }
+
+        // Comparing two packages built in the same process catches an unordered set only by chance,
+        // since two sets holding the same names often do iterate alike, so the order each unordered
+        // collection is written in is also pinned directly.
+        let rootModelData = try #require(try firstReader.readFile(at: URL(string: "/3D/3dmodel.model")!))
+        let rootModelXML = try #require(String(data: rootModelData, encoding: .utf8))
+        try assertOrder(of: ["xmlns:ay=", "xmlns:em=", "xmlns:queue=", "xmlns:zed="], in: rootModelXML)
+        try assertOrder(of: [
+            "http://schemas.microsoft.com/3dmanufacturing/core/2015/02",
+            "http://schemas.microsoft.com/3dmanufacturing/material/2015/02",
+        ], in: rootModelXML)
+        try assertOrder(of: ["ay:first=", "em:second=", "queue:third=", "zed:fourth="], in: rootModelXML)
+        #expect(rootModelXML.contains(#"requiredextensions="bo m s""#))
+        #expect(rootModelXML.contains(#"recommendedextensions="mm t""#))
+
+        let relsData = try #require(try firstReader.readFile(at: URL(string: "/3D/_rels/3dmodel.model.rels")!))
+        let targets = try Document(data: relsData).documentElement?[elements: "Relationship"]
+            .sorted { ($0[attribute: "Id"] ?? "") < ($1[attribute: "Id"] ?? "") }
+            .map { $0[attribute: "Target"] ?? "" }
+
+        #expect(targets == [
+            "/3D/alpha.model", "/3D/beta.model", "/3D/delta.model", "/3D/epsilon.model", "/3D/gamma.model",
+        ])
     }
 
     @Test func `textures and thumbnails are written with incrementing numbers and readable back`() throws {

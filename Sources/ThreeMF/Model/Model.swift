@@ -65,8 +65,10 @@ public struct Model: Sendable, XMLElementCodable {
             element.setValue(unit, forAttribute: .unit)
             element.setValue(xmlLanguageCode, forAttribute: XML.lang)
             element.setValue(languageCode, forAttribute: .language)
-            element.setValue(requiredExtensions.compactMap(\.outputPrefix).nonEmpty, forAttribute: .requiredExtensions)
-            element.setValue(recommendedExtensions.compactMap(\.outputPrefix).nonEmpty, forAttribute: .recommendedExtensions)
+            // Sorted because these are sets: the prefixes are unordered, but the attribute they're
+            // written into is a list, and it shouldn't come out differently on every run.
+            element.setValue(requiredExtensions.compactMap(\.outputPrefix).sorted().nonEmpty, forAttribute: .requiredExtensions)
+            element.setValue(recommendedExtensions.compactMap(\.outputPrefix).sorted().nonEmpty, forAttribute: .recommendedExtensions)
             element.encode(metadata, elementName: Core.metadata)
             element.encode(resources, elementName: Core.resources)
             element.encode(build, elementName: Core.build)
@@ -108,11 +110,14 @@ public extension Model {
     func xmlDocument() -> Document {
         let modelDocument = Document(self, elementName: Core.model)
 
-        for (prefix, uri) in customNamespaces {
+        // Both of these are unordered collections, so they're sorted before being declared: the
+        // order the declarations go on in is the order they're written out in, and a model that
+        // serialized differently from one run to the next would make packages irreproducible.
+        for (prefix, uri) in customNamespaces.sorted(by: { $0.key < $1.key }) {
             modelDocument.documentElement?.declareNamespace(uri, forPrefix: prefix)
         }
 
-        for namespaceName in modelDocument.undeclaredNamespaceNames {
+        for namespaceName in modelDocument.undeclaredNamespaceNames.sorted() {
             guard let namespace = Namespace.knownNamespace(for: namespaceName) else {
                 assertionFailure("Unknown namespace \(namespaceName)")
                 continue

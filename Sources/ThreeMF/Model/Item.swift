@@ -36,7 +36,8 @@ public struct Item: Sendable, XMLElementCodable {
         element.setValue(path, forAttribute: Production.path)
 
         element.encode(metadata, elementName: Core.metadata, containedIn: Core.metadataGroup)
-        for (name, value) in customAttributes {
+        // In name order, so that an item's attributes don't come out in a different order every run
+        for (name, value) in customAttributes.sorted(by: { ($0.key.namespaceName ?? "", $0.key.localName) < ($1.key.namespaceName ?? "", $1.key.localName) }) {
             element.setValue(value, forAttribute: name)
         }
     }
