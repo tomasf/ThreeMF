@@ -91,9 +91,9 @@ struct PackageWriterReaderTests {
         let texture2Data = Data("texture-2".utf8)
         let thumbnailData = Data("thumbnail".utf8)
 
-        let texture1URL = try writer.addTexture(data: texture1Data)
-        let texture2URL = try writer.addTexture(data: texture2Data)
-        let thumbnailURL = try writer.addThumbnail(data: thumbnailData, mimeType: "image/png")
+        let texture1URL = writer.addTexture(data: texture1Data)
+        let texture2URL = writer.addTexture(data: texture2Data)
+        let thumbnailURL = writer.addThumbnail(data: thumbnailData, mimeType: "image/png")
 
         #expect(texture1URL.relativePath.hasSuffix("Texture1"))
         #expect(texture2URL.relativePath.hasSuffix("Texture2"))
@@ -111,6 +111,122 @@ struct PackageWriterReaderTests {
         let data = try writer.finalize()
         let reader = try PackageReader<Data>(data: data)
         #expect(try reader.readFile(at: URL(string: "/never/added")!) == nil)
+    }
+
+    @Test func `addFile replaces an existing path instead of throwing`() throws {
+        let writer = PackageWriter<Data>()
+        writer.model = Model(build: Build(items: []))
+
+        let url = URL(string: "/Metadata/test.config")!
+        writer.addFile(at: url, contentType: nil, relationshipType: nil, data: Data("first".utf8))
+        writer.addFile(at: url, contentType: nil, relationshipType: nil, data: Data("second".utf8))
+
+        let data = try writer.finalize()
+        let reader = try PackageReader<Data>(data: data)
+        #expect(try reader.readFile(at: url) == Data("second".utf8))
+    }
+
+    @Test func `fileContents reads back a file added this session`() throws {
+        let writer = PackageWriter<Data>()
+        writer.model = Model(build: Build(items: []))
+
+        let url = URL(string: "/Metadata/test.config")!
+        writer.addFile(at: url, contentType: nil, relationshipType: nil, data: Data("hello".utf8))
+
+        #expect(try writer.fileContents(at: url) == Data("hello".utf8))
+    }
+
+    @Test func `fileContents returns nil for a path nothing has staged`() throws {
+        let writer = PackageWriter<Data>()
+        writer.model = Model(build: Build(items: []))
+        #expect(try writer.fileContents(at: URL(string: "/never/added")!) == nil)
+    }
+
+    @Test func `fileContents lazily serializes the root model on first read`() throws {
+        let writer = PackageWriter<Data>()
+        writer.model = sampleModel()
+
+        let modelData = try #require(try writer.fileContents(at: URL(string: "/3D/3dmodel.model")!))
+        let document = try Document(data: modelData)
+        #expect(document.documentElement?.name == "model")
+    }
+
+    @Test func `replacing the root model's raw bytes via addFile changes what finalize writes`() throws {
+        // The whole point of exposing raw read/write access to the model file: a caller can read the
+        // current XML, do its own surgery (e.g. with Nodal directly), and write the result back,
+        // entirely bypassing the structured Model/Object/Item types.
+        let writer = PackageWriter<Data>()
+        writer.model = sampleModel()
+
+        let modelURL = URL(string: "/3D/3dmodel.model")!
+        let originalXML = try #require(try writer.fileContents(at: modelURL))
+        let document = try Document(data: originalXML)
+        document.documentElement?[attribute: "surgically-added"] = "yes"
+
+        writer.addFile(at: modelURL, contentType: nil, relationshipType: nil, data: try document.xmlData())
+
+        let data = try writer.finalize()
+        let reader = try PackageReader<Data>(data: data)
+        let rawModelData = try #require(try reader.readFile(at: modelURL))
+        let rereadDocument = try Document(data: rawModelData)
+        #expect(rereadDocument.documentElement?[attribute: "surgically-added"] == "yes")
+    }
+
+    @Test func `async finalize also reflects a raw replacement of the root model`() async throws {
+        let writer = PackageWriter<Data>()
+        writer.model = sampleModel()
+
+        let modelURL = URL(string: "/3D/3dmodel.model")!
+        let originalXML = try #require(try writer.fileContents(at: modelURL))
+        let document = try Document(data: originalXML)
+        document.documentElement?[attribute: "surgically-added"] = "yes"
+        writer.addFile(at: modelURL, contentType: nil, relationshipType: nil, data: try document.xmlData())
+
+        let data = try await writer.finalize()
+        let reader = try PackageReader<Data>(data: data)
+        let rawModelData = try #require(try reader.readFile(at: modelURL))
+        let rereadDocument = try Document(data: rawModelData)
+        #expect(rereadDocument.documentElement?[attribute: "surgically-added"] == "yes")
+    }
+
+    @Test func `content type overrides do not accumulate duplicates when a path is replaced`() throws {
+        let writer = PackageWriter<Data>()
+        writer.model = Model(build: Build(items: []))
+
+        let url = URL(string: "/Metadata/test.txt")!
+        writer.addFile(at: url, contentType: "text/plain", relationshipType: nil, data: Data("first".utf8))
+        writer.addFile(at: url, contentType: "text/plain", relationshipType: nil, data: Data("second".utf8))
+
+        let data = try writer.finalize()
+        let reader = try PackageReader<Data>(data: data)
+        let contentTypesData = try #require(try reader.readFile(at: URL(string: "/[Content_Types].xml")!))
+        let document = try Document(data: contentTypesData)
+        let overridesForPath = document.documentElement?[elements: "Override"].filter {
+            $0[attribute: "PartName"] == url.relativePath
+        }
+        #expect(overridesForPath?.count == 1)
+    }
+
+    @Test func `relationship ids stay unique when a related path is replaced`() throws {
+        let writer = PackageWriter<Data>()
+        writer.model = Model(build: Build(items: []))
+
+        // Replacing the first file drops its ID, so an ID derived from the remaining count would
+        // collide with the second file's still-in-use ID.
+        let first = URL(string: "/Metadata/first.txt")!
+        let second = URL(string: "/Metadata/second.txt")!
+        writer.addFile(at: first, contentType: "text/plain", relationshipType: "urn:test", data: Data("a".utf8))
+        writer.addFile(at: second, contentType: "text/plain", relationshipType: "urn:test", data: Data("b".utf8))
+        writer.addFile(at: first, contentType: "text/plain", relationshipType: "urn:test", data: Data("c".utf8))
+
+        let data = try writer.finalize()
+        let reader = try PackageReader<Data>(data: data)
+        let relsData = try #require(try reader.readFile(at: URL(string: "/_rels/.rels")!))
+        let document = try Document(data: relsData)
+        let ids = try #require(document.documentElement?[elements: "Relationship"].map { $0[attribute: "Id"] })
+
+        #expect(ids.count == 3)
+        #expect(Set(ids).count == ids.count)
     }
 
     // -- Malformed packages, built directly with Zip since PackageWriter can't produce these --

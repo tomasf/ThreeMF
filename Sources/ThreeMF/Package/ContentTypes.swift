@@ -7,10 +7,12 @@ internal struct ContentTypes: Sendable {
     internal init() {}
 
     mutating func add(mimeType: String, for fileExtension: String) {
+        items.removeAll { if case .default(fileExtension, _) = $0 { true } else { false } }
         items.append(.default(fileExtension: fileExtension, mimeType: mimeType))
     }
 
     mutating func add(mimeType: String, for part: URL) {
+        items.removeAll { if case .override(part, _) = $0 { true } else { false } }
         items.append(.override(part: part, mimeType: mimeType))
     }
 

@@ -98,3 +98,28 @@ public struct Model: Sendable, XMLElementCodable {
         build = try element.decode(elementName: Core.build)
     }
 }
+
+public extension Model {
+    /// The model as an XML document, with every namespace it uses declared on the root element.
+    ///
+    /// This is the `3dmodel.model` payload of a 3MF package. ``PackageWriter`` uses it to serialize
+    /// the root model and each additional one; it's public so a model can also be written on its own,
+    /// for instance into an archive that something else is assembling.
+    func xmlDocument() -> Document {
+        let modelDocument = Document(self, elementName: Core.model)
+
+        for (prefix, uri) in customNamespaces {
+            modelDocument.documentElement?.declareNamespace(uri, forPrefix: prefix)
+        }
+
+        for namespaceName in modelDocument.undeclaredNamespaceNames {
+            guard let namespace = Namespace.knownNamespace(for: namespaceName) else {
+                assertionFailure("Unknown namespace \(namespaceName)")
+                continue
+            }
+            modelDocument.documentElement?.declareNamespace(namespaceName, forPrefix: namespace.outputPrefix)
+        }
+
+        return modelDocument
+    }
+}

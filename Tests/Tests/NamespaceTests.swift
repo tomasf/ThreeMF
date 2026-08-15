@@ -4,7 +4,7 @@ import Nodal
 @testable import ThreeMF
 
 struct NamespaceTests {
-    // Namespace-prefix declaration only happens in PackageWriter.xmlDocument(for:), so this has to
+    // Namespace-prefix declaration only happens in Model.xmlDocument(), so this has to
     // go through a full PackageWriter<Data> -> PackageReader<Data> cycle rather than the lighter
     // Node-only roundTrip helper: a bare Document(model, elementName:) never declares the "p"/"m"
     // prefixes those extensions need, so decode would never resolve them.

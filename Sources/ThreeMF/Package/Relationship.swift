@@ -8,8 +8,20 @@ internal struct Relationships: Sendable {
     internal init() {}
 
     mutating func add(id: String? = nil, target: URL, type: String) {
-        let resolvedID = id ?? "rel\(relationships.count + 1)"
-        relationships.append(Relationship(target: target, id: resolvedID, typeURI: type))
+        relationships.removeAll { $0.target == target }
+        relationships.append(Relationship(target: target, id: id ?? unusedID(), typeURI: type))
+    }
+
+    // Relationship IDs are xsd:ID, so they must be unique within the part. Deriving one from the
+    // count alone collides whenever a relationship has been replaced (which removes a lower-numbered
+    // ID while a higher-numbered one is still in use), or whenever an explicit ID was passed in.
+    private func unusedID() -> String {
+        let existingIDs = Set(relationships.map(\.id))
+        var counter = 1
+        while existingIDs.contains("rel\(counter)") {
+            counter += 1
+        }
+        return "rel\(counter)"
     }
 
     func count(ofType relationshipType: String) -> Int {
