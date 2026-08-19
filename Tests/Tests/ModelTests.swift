@@ -7,7 +7,6 @@ struct ModelTests {
         let model = Model(
             unit: .centimeter,
             xmlLanguageCode: "en-US",
-            languageCode: "en",
             metadata: [Metadata(name: .title, value: "A model")],
             resources: [meshObject(id: 1)],
             buildItems: [Item(objectID: 1)]
@@ -15,7 +14,6 @@ struct ModelTests {
         let decoded = try roundTrip(model)
         #expect(decoded.unit == .centimeter)
         #expect(decoded.xmlLanguageCode == "en-US")
-        #expect(decoded.languageCode == "en")
         #expect(decoded.metadata.map(\.value) == ["A model"])
         #expect(decoded.resources.resources.count == 1)
         #expect(decoded.resources.resources.first?.id == 1)
@@ -30,13 +28,10 @@ struct ModelTests {
         #expect(decoded.build.items.isEmpty)
     }
 
-    // xml:lang (a namespaced attribute) and the plain "language" attribute are distinct fields on
-    // the wire, so use different values for each and an accidental aliasing between them is caught.
-    @Test func `xmlLanguageCode and languageCode round trip independently`() throws {
-        let model = Model(xmlLanguageCode: "en-US", languageCode: "sv", build: Build(items: []))
+    @Test func `xmlLanguageCode round trips as xml lang`() throws {
+        let model = Model(xmlLanguageCode: "en-US", build: Build(items: []))
         let decoded = try roundTrip(model)
         #expect(decoded.xmlLanguageCode == "en-US")
-        #expect(decoded.languageCode == "sv")
     }
 
     @Test func `custom attributes on the model round trip`() throws {

@@ -17,7 +17,6 @@ extension ExpandedName {
 
     static var unit: Self { attribute("unit") }
 
-    static var language: Self { attribute("language") }
     static var requiredExtensions: Self { attribute("requiredextensions") }
     static var recommendedExtensions: Self { attribute("recommendedextensions") }
 

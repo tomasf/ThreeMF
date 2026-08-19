@@ -23,9 +23,6 @@ public struct Model: Sendable, XMLElementCodable {
     /// The language of the model's human-readable text, as the `xml:lang` attribute.
     public var xmlLanguageCode: String?
 
-    /// The language of the model's human-readable text, as the core `language` attribute.
-    public var languageCode: String?
-
     /// The extensions a consumer must understand to process this model correctly.
     ///
     /// A consumer that doesn't support one of these is expected to refuse the file rather than produce
@@ -63,7 +60,6 @@ public struct Model: Sendable, XMLElementCodable {
     /// - Parameters:
     ///   - unit: The unit coordinates are in. `nil` leaves it unstated, meaning millimetres.
     ///   - xmlLanguageCode: The `xml:lang` for the model's text.
-    ///   - languageCode: The core `language` attribute for the model's text.
     ///   - requiredExtensions: Extensions a consumer must support to use this model.
     ///   - recommendedExtensions: Extensions that are helpful but not essential.
     ///   - customNamespaces: Namespaces to declare, keyed by prefix.
@@ -74,7 +70,6 @@ public struct Model: Sendable, XMLElementCodable {
     public init(
         unit: Unit? = nil,
         xmlLanguageCode: String? = nil,
-        languageCode: String? = nil,
         requiredExtensions: Set<Namespace> = [],
         recommendedExtensions: Set<Namespace> = [],
         customNamespaces: [String: String] = [:], // Prefix: URI
@@ -85,7 +80,6 @@ public struct Model: Sendable, XMLElementCodable {
     ) {
         self.unit = unit
         self.xmlLanguageCode = xmlLanguageCode
-        self.languageCode = languageCode
         self.requiredExtensions = requiredExtensions
         self.recommendedExtensions = recommendedExtensions
         self.customNamespaces = customNamespaces
@@ -100,7 +94,6 @@ public struct Model: Sendable, XMLElementCodable {
     /// - Parameters:
     ///   - unit: The unit coordinates are in. `nil` leaves it unstated, meaning millimetres.
     ///   - xmlLanguageCode: The `xml:lang` for the model's text.
-    ///   - languageCode: The core `language` attribute for the model's text.
     ///   - requiredExtensions: Extensions a consumer must support to use this model.
     ///   - recommendedExtensions: Extensions that are helpful but not essential.
     ///   - customNamespaces: Namespaces to declare, keyed by prefix.
@@ -111,7 +104,6 @@ public struct Model: Sendable, XMLElementCodable {
     public init(
         unit: Unit? = nil,
         xmlLanguageCode: String? = nil,
-        languageCode: String? = nil,
         requiredExtensions: Set<Namespace> = [],
         recommendedExtensions: Set<Namespace> = [],
         customNamespaces: [String: String] = [:], // Prefix: URI
@@ -121,14 +113,13 @@ public struct Model: Sendable, XMLElementCodable {
         buildItems: [Item] = []
     ) {
         let build = Build(items: buildItems)
-        self.init(unit: unit, xmlLanguageCode: xmlLanguageCode, languageCode: languageCode, requiredExtensions: requiredExtensions, recommendedExtensions: recommendedExtensions, customNamespaces: customNamespaces, customAttributes: customAttributes, metadata: metadata, resources: resources, build: build)
+        self.init(unit: unit, xmlLanguageCode: xmlLanguageCode, requiredExtensions: requiredExtensions, recommendedExtensions: recommendedExtensions, customNamespaces: customNamespaces, customAttributes: customAttributes, metadata: metadata, resources: resources, build: build)
     }
 
     public func encode(to element: Node) {
         $requiredExtensions.withValue(requiredExtensions) {
             element.setValue(unit, forAttribute: .unit)
             element.setValue(xmlLanguageCode, forAttribute: XML.lang)
-            element.setValue(languageCode, forAttribute: .language)
             // Sorted because these are sets: the prefixes are unordered, but the attribute they're
             // written into is a list, and it shouldn't come out differently on every run.
             element.setValue(requiredExtensions.compactMap(\.outputPrefix).sorted().nonEmpty, forAttribute: .requiredExtensions)
@@ -146,7 +137,6 @@ public struct Model: Sendable, XMLElementCodable {
     public init(from element: Node) throws {
         unit = try element.value(forAttribute: .unit)
         xmlLanguageCode = try element.value(forAttribute: XML.lang)
-        languageCode = try element.value(forAttribute: .language)
 
         if let requiredExtensionPrefixes: [String] = try element.value(forAttribute: .requiredExtensions) {
             requiredExtensions = Namespace.namespaces(forPrefixes: requiredExtensionPrefixes, in: element)
@@ -163,7 +153,7 @@ public struct Model: Sendable, XMLElementCodable {
         let knownNamespaces = Set(Namespace.known.map(\.uri))
         customNamespaces = element.declaredNamespaces.filter { $0 != nil && !knownNamespaces.contains($1) } as! [String: String]
 
-        let knownAttributes: Set<ExpandedName> = [.unit, XML.lang, .language, .requiredExtensions, .recommendedExtensions]
+        let knownAttributes: Set<ExpandedName> = [.unit, XML.lang, .requiredExtensions, .recommendedExtensions]
         customAttributes = element.customAttributes(besides: knownAttributes)
 
         metadata = try element.decode(elementName: Core.metadata)
