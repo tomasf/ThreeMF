@@ -9,13 +9,39 @@ internal extension UUID {
     }
 }
 
+/// A 3MF model: the resources a package contains and the build that arranges them.
+///
+/// This is the content of a `3dmodel.model` part. Set it on ``PackageWriter/model`` to write it, or
+/// read one with ``PackageReader/model(at:)``. Objects, materials and other ``Resource`` values live
+/// in ``resources``, and ``build`` picks which of them are actually output, and where.
 public struct Model: Sendable, XMLElementCodable {
+    /// The unit that every coordinate in the model is expressed in.
+    ///
+    /// `nil` means the file doesn't say, which per the spec means ``Unit/millimeter``.
     public var unit: Unit?
+
+    /// The language of the model's human-readable text, as the `xml:lang` attribute.
     public var xmlLanguageCode: String?
+
+    /// The language of the model's human-readable text, as the core `language` attribute.
     public var languageCode: String?
 
+    /// The extensions a consumer must understand to process this model correctly.
+    ///
+    /// A consumer that doesn't support one of these is expected to refuse the file rather than produce
+    /// something wrong.
     public var requiredExtensions: Set<Namespace>
+
+    /// The extensions that improve this model but aren't essential to it.
+    ///
+    /// A consumer that doesn't support one of these can still process the model, ignoring what it
+    /// doesn't understand.
     public var recommendedExtensions: Set<Namespace>
+
+    /// Namespaces to declare on the `<model>` element, keyed by prefix.
+    ///
+    /// Needed for any ``customAttributes`` in a namespace of your own, and preserved when a model that
+    /// declared them is read back.
     public var customNamespaces: [String: String]
 
     /// Attributes on the `<model>` element that aren't part of 3MF itself, preserved as they are.
@@ -24,10 +50,27 @@ public struct Model: Sendable, XMLElementCodable {
     /// writing a model that uses an undeclared namespace is a programmer error and traps.
     public var customAttributes: [ExpandedName: String]
 
+    /// Metadata about the model as a whole, such as its title or designer.
     public var metadata: [Metadata]
+
+    /// Everything the model defines: objects, materials, color groups, textures and other resources.
     public var resources: ResourceContainer
+
+    /// The items to output, each referring to an object in ``resources``.
     public var build: Build
 
+    /// Creates a model with an explicit build.
+    /// - Parameters:
+    ///   - unit: The unit coordinates are in. `nil` leaves it unstated, meaning millimetres.
+    ///   - xmlLanguageCode: The `xml:lang` for the model's text.
+    ///   - languageCode: The core `language` attribute for the model's text.
+    ///   - requiredExtensions: Extensions a consumer must support to use this model.
+    ///   - recommendedExtensions: Extensions that are helpful but not essential.
+    ///   - customNamespaces: Namespaces to declare, keyed by prefix.
+    ///   - customAttributes: Non-3MF attributes to keep on the `<model>` element.
+    ///   - metadata: Metadata about the model.
+    ///   - resources: The model's resources.
+    ///   - build: The items to output.
     public init(
         unit: Unit? = nil,
         xmlLanguageCode: String? = nil,
@@ -53,6 +96,18 @@ public struct Model: Sendable, XMLElementCodable {
         self.build = build
     }
 
+    /// Creates a model, building its ``Build`` from the given items.
+    /// - Parameters:
+    ///   - unit: The unit coordinates are in. `nil` leaves it unstated, meaning millimetres.
+    ///   - xmlLanguageCode: The `xml:lang` for the model's text.
+    ///   - languageCode: The core `language` attribute for the model's text.
+    ///   - requiredExtensions: Extensions a consumer must support to use this model.
+    ///   - recommendedExtensions: Extensions that are helpful but not essential.
+    ///   - customNamespaces: Namespaces to declare, keyed by prefix.
+    ///   - customAttributes: Non-3MF attributes to keep on the `<model>` element.
+    ///   - metadata: Metadata about the model.
+    ///   - resources: The model's resources.
+    ///   - buildItems: The items to output.
     public init(
         unit: Unit? = nil,
         xmlLanguageCode: String? = nil,
@@ -117,6 +172,7 @@ public struct Model: Sendable, XMLElementCodable {
     }
 }
 
+/// Serializing a model on its own.
 public extension Model {
     /// The model as an XML document, with every namespace it uses declared on the root element.
     ///
@@ -136,7 +192,7 @@ public extension Model {
         for namespaceName in modelDocument.undeclaredNamespaceNames.sorted() {
             guard let namespace = Namespace.knownNamespace(for: namespaceName) else {
                 // Either a built-in namespace is missing from Namespace.known, or a custom attribute
-                // uses a namespace the model never declared a prefix for — see Model.customAttributes.
+                // uses a namespace the model never declared a prefix for. See Model.customAttributes.
                 assertionFailure("Undeclared namespace \(namespaceName)")
                 continue
             }

@@ -1,13 +1,32 @@
 import Foundation
 import Nodal
 
+/// An 8-bit sRGB color with an alpha channel.
+///
+/// Written as `#RRGGBB`, or `#RRGGBBAA` when it isn't fully opaque. Used by ``ColorGroup`` and as
+/// an object's display color.
 public struct Color: Hashable, Sendable {
+    /// The storage for one channel: 0 through 255.
     public typealias Component = UInt8
+
+    /// The red channel.
     public let red: Component
+
+    /// The green channel.
     public let green: Component
+
+    /// The blue channel.
     public let blue: Component
+
+    /// The alpha channel, where 255 is fully opaque.
     public let alpha: Component
 
+    /// Creates a color from its channels.
+    /// - Parameters:
+    ///   - red: The red channel.
+    ///   - green: The green channel.
+    ///   - blue: The blue channel.
+    ///   - alpha: The alpha channel. Defaults to fully opaque.
     public init(red: UInt8, green: UInt8, blue: UInt8, alpha: UInt8 = 0xFF) {
         self.red = red
         self.green = green
@@ -15,10 +34,13 @@ public struct Color: Hashable, Sendable {
         self.alpha = alpha
     }
 
+    /// Whether the color is fully opaque, and so can be written without an alpha channel.
     public var isOpaque: Bool { alpha == 0xFF }
 }
 
+/// Common colors.
 public extension Color {
+    /// Opaque white.
     static var white: Color { .init(red: 0xFF, green: 0xFF, blue: 0xFF) }
 }
 

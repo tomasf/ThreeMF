@@ -1,8 +1,8 @@
 import Foundation
 import Zip
 
-/// Loads 3MF model packages from either a URL or in‑memory data, resolves cross‑file references,
-/// and produces a flattened, render‑ready representation of meshes and build items.
+/// Loads 3MF model packages from either a URL or in-memory data, resolves cross-file references,
+/// and produces a flattened, render-ready representation of meshes and build items.
 ///
 /// ModelLoader reads a root 3MF model and any additional models it references. It then resolves
 /// each build item down to concrete mesh instances with accumulated transforms, properties, and metadata.
@@ -34,7 +34,7 @@ public struct ModelLoader<Source: Sendable> {
         self.init(source: url)
     }
 
-    /// Creates a loader that will read a 3MF package from in‑memory data.
+    /// Creates a loader that will read a 3MF package from in-memory data.
     ///
     /// - Parameter data: The 3MF package data to load.
     public init(data: Data) where Source == Data {
@@ -76,7 +76,7 @@ public struct ModelLoader<Source: Sendable> {
             do {
                 return ($0, try makeReader().model(at: $0))
             } catch ThreeMFError.failedToReadArchiveFile(_, nil) {
-                // PackageReader.model(at:) never lets a raw ZipError escape — it always wraps
+                // PackageReader.model(at:) never lets a raw ZipError escape; it always wraps
                 // read failures as ThreeMFError.failedToReadArchiveFile first, with a nil
                 // underlying error specifically when the file itself couldn't be found.
                 throw LoadingError.modelNotFoundInArchive(path: $0)
@@ -178,6 +178,7 @@ public struct ModelLoader<Source: Sendable> {
     }
 }
 
+/// What loading produces, and what can go wrong.
 public extension ModelLoader {
     /// Errors that can occur while loading and resolving a 3MF package.
     enum LoadingError: Error {
@@ -192,7 +193,7 @@ public extension ModelLoader {
         case objectNotFound (modelPath: URL?, ResourceID)
     }
 
-    /// A flattened, render‑ready representation of a 3MF package after loading and resolution.
+    /// A flattened, render-ready representation of a 3MF package after loading and resolution.
     ///
     /// LoadedModel contains:
     /// - The root model that initiated loading

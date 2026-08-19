@@ -31,7 +31,7 @@ struct ModelTests {
     }
 
     // xml:lang (a namespaced attribute) and the plain "language" attribute are distinct fields on
-    // the wire — use different values for each so an accidental aliasing between them is caught.
+    // the wire, so use different values for each and an accidental aliasing between them is caught.
     @Test func `xmlLanguageCode and languageCode round trip independently`() throws {
         let model = Model(xmlLanguageCode: "en-US", languageCode: "sv", build: Build(items: []))
         let decoded = try roundTrip(model)

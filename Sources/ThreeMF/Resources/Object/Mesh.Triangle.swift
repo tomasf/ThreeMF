@@ -1,15 +1,36 @@
 import Foundation
 import Nodal
 
+/// A mesh's triangles.
 public extension Mesh {
+    /// One triangle of a mesh, as three vertex indices and optional material properties.
+    ///
+    /// The winding order of `v1`, `v2` and `v3` gives the triangle its facing: counter-clockwise seen
+    /// from outside the solid.
     struct Triangle: Hashable, Sendable, XMLElementCodable {
+        /// The index of the first vertex in ``Mesh/vertices``.
         public let v1: ResourceIndex
+
+        /// The index of the second vertex.
         public let v2: ResourceIndex
+
+        /// The index of the third vertex.
         public let v3: ResourceIndex
 
+        /// Which entry of the property group this triangle uses, either one for the whole triangle or one
+        /// per vertex. `nil` falls back to the object's own property.
         public let propertyIndex: Index?
+
+        /// The property group ``propertyIndex`` refers into. `nil` uses the object's ``Object/propertyGroupID``.
         public let propertyGroup: ResourceID?
 
+        /// Creates a triangle.
+        /// - Parameters:
+        ///   - v1: The index of the first vertex.
+        ///   - v2: The index of the second vertex.
+        ///   - v3: The index of the third vertex.
+        ///   - propertyIndex: The properties to use, or `nil` to inherit the object's.
+        ///   - propertyGroup: The group the property index refers into.
         public init(v1: ResourceIndex, v2: ResourceIndex, v3: ResourceIndex, propertyIndex: Index?, propertyGroup: ResourceID? = nil) {
             self.v1 = v1
             self.v2 = v2
@@ -38,11 +59,20 @@ public extension Mesh {
     }
 }
 
+/// How a triangle picks its material properties.
 public extension Mesh.Triangle {
+    /// Which entry of a property group a triangle uses.
+    ///
+    /// One index applies to the whole triangle; three interpolate across it, for gradients and texture
+    /// coordinates.
     enum Index: Hashable, Sendable {
+        /// One property for the whole triangle.
         case uniform (ResourceIndex)
+
+        /// One property per vertex, interpolated across the triangle, in the same order as `v1`, `v2`, `v3`.
         case perVertex (ResourceIndex, ResourceIndex, ResourceIndex)
 
+        /// The three indices this resolves to, repeating the single one for ``uniform(_:)``.
         public var indices: [ResourceIndex] {
             switch self {
             case .uniform (let index): return [index, index, index]

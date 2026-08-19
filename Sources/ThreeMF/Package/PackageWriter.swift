@@ -2,23 +2,23 @@ import Foundation
 import Zip
 import Nodal
 
-/// Writes 3MF packages to either a file URL or in‑memory data, managing models, related files, and relationships.
+/// Writes 3MF packages to either a file URL or in-memory data, managing models, related files, and relationships.
 ///
 /// PackageWriter abstracts the underlying ZIP archive and handles:
 /// - Writing the root model and any additional models
 /// - Adding textures, thumbnails, and other related files with appropriate content types and relationships
-/// - Finalizing to disk (URL) or returning in‑memory Data
+/// - Finalizing to disk (URL) or returning in-memory Data
 ///
-/// Nothing is written to the underlying ZIP archive until ``finalize()``. Until then, every file —
-/// the root model, additional models, and anything added via ``addFile(at:contentType:relationshipType:relativeToRootModel:data:)``
-/// — lives in an in‑memory staging area, keyed by path. This is what lets ``addFile(at:contentType:relationshipType:relativeToRootModel:data:)``
+/// Nothing is written to the underlying ZIP archive until ``finalize()``. Until then, every file
+/// lives in an in-memory staging area keyed by path: the root model, additional models, and anything
+/// added via ``addFile(at:contentType:relationshipType:relativeToRootModel:data:)``. This is what lets that method
 /// freely replace a path that was already written, and what lets ``fileContents(at:)`` read back
 /// anything staged so far (including the models, serialized on demand): the underlying ZIP writer
 /// can only ever append an entry, never replace one, so actually writing to it is deferred as long
 /// as possible and done exactly once per path.
 ///
 /// Usage:
-/// - Initialize with a URL (for on‑disk output) or with no parameters (for in‑memory output)
+/// - Initialize with a URL (for on-disk output) or with no parameters (for in-memory output)
 /// - Populate `model` and add any additional files or models
 /// - Call `finalize()` to write the package
 ///
@@ -45,6 +45,7 @@ public class PackageWriter<Target> {
     }
 }
 
+/// Writing a package to a file on disk.
 public extension PackageWriter<URL> {
     /// Creates a writer that outputs a 3MF package to a file URL.
     ///
@@ -65,6 +66,7 @@ public extension PackageWriter<URL> {
     }
 }
 
+/// Writing a package in memory.
 public extension PackageWriter<Data> {
     /// Creates a writer that builds a 3MF package in memory.
     convenience init() {
@@ -93,6 +95,7 @@ public extension PackageWriter<Data> {
     }
 }
 
+/// Adding content to a package, however it will be written.
 public extension PackageWriter {
     /// Adds a file to the package at the specified URL, with optional content type and relationship metadata.
     ///
@@ -119,8 +122,8 @@ public extension PackageWriter {
     /// Reads the current staged contents of a file at the given URL, or `nil` if nothing is there.
     ///
     /// This includes anything added via ``addFile(at:contentType:relationshipType:relativeToRootModel:data:)``,
-    /// as well as the root model and any additional model (registered via ``addAdditionalModel(_:named:)``)
-    /// — those are serialized to their current XML on first access (by this method, or by ``finalize()``
+    /// as well as the root model and any additional model registered via ``addAdditionalModel(_:named:)``.
+    /// Those are serialized to their current XML on first access (by this method, or by ``finalize()``
     /// if nothing reads them first) and cached, so a later call sees whatever the most recent write left
     /// there, and ``finalize()`` writes exactly that.
     ///
@@ -231,7 +234,7 @@ internal extension PackageWriter {
     }
 
     // Serializes and stages the root model and any additional model not already staged (i.e. not
-    // already read via `fileContents(at:)` or overwritten via `addFile`). Safe to call repeatedly —
+    // already read via `fileContents(at:)` or overwritten via `addFile`). Safe to call repeatedly:
     // already-staged paths are left untouched, so anything staged with different content stays that way.
     func stageModelFilesIfNeeded() throws {
         registerModelFiles()

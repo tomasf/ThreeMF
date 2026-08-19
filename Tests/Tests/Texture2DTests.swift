@@ -38,7 +38,7 @@ struct Texture2DTests {
         #expect(onlyU.effectiveTileStyles.U == .clamp)
         #expect(onlyU.effectiveTileStyles.V == .wrap)
 
-        // `.none` here would resolve to Optional.none (nil), not the TileStyle.none case — spell it
+        // `.none` here would resolve to Optional.none (nil), not the TileStyle.none case, so spell it
         // out explicitly to actually exercise the "no tiling" case rather than the "unset" one.
         let onlyV = Texture2D(id: 1, pathURL: URL(string: "/t.png")!, contentType: .png, tileStyleV: Texture2D.TileStyle.none)
         #expect(onlyV.effectiveTileStyles.U == .wrap)

@@ -22,7 +22,7 @@ func decodeAttribute<T: XMLValueDecodable>(_ type: T.Type, from string: String) 
 // Builds a scratch document whose root has the 3MF core namespace declared as the default
 // namespace, matching what PackageWriter sets up for a real <model> root. This matters for types
 // that encode child elements via bare (unprefixed) names as a performance optimization (Mesh's
-// vertices/triangles) — those only resolve back through a namespace-qualified decode lookup if a
+// vertices/triangles). Those only resolve back through a namespace-qualified decode lookup if a
 // default namespace is actually in scope, same as in a real written package.
 private func scratchDocument(elementName: String) -> Document {
     let document = Document()
@@ -31,7 +31,7 @@ private func scratchDocument(elementName: String) -> Document {
 }
 
 // Round-trips a value through the XMLElementCodable protocol using an in-memory Node tree only
-// (no text serialization) — fast, and adequate whenever escaping/whitespace isn't in question.
+// (no text serialization), which is fast and adequate whenever escaping/whitespace isn't in question.
 func roundTrip<T: XMLElementCodable>(_ value: T, elementName: String = "test") throws -> T {
     let document = scratchDocument(elementName: elementName)
     value.encode(to: document.documentElement!)
@@ -49,7 +49,7 @@ func roundTripThroughText<T: XMLElementCodable>(_ value: T, elementName: String 
 
 // Like roundTrip, but encodes the value onto a *child* of the namespaced root rather than the
 // root itself. Needed for types (like Item) whose decode enumerates every raw attribute on their
-// own element (e.g. to recover unknown/custom attributes) — encoding straight onto the root would
+// own element (e.g. to recover unknown/custom attributes). Encoding straight onto the root would
 // pick up the root's own "xmlns" declaration as a spurious "custom" attribute, which never happens
 // in a real document since these types are always nested under a namespace-declaring ancestor, not
 // the ancestor itself.

@@ -2,12 +2,24 @@ import Foundation
 import Nodal
 
 // t:triangleset
+/// Named subsets of a mesh's triangles.
 public extension Mesh {
+    /// A named group of triangles within a mesh, from the triangle sets extension.
+    ///
+    /// Lets part of a mesh be referred to as a unit, such as a face to treat differently or a region
+    /// to select, without splitting it into a separate object.
     struct TriangleSet: Sendable {
         let elementName: ExpandedName = TriangleSets.triangleSet
 
+        /// A human-readable name for the set.
         public var name: String
+
+        /// An identifier for the set, unique within its mesh.
         public var identifier: String
+
+        /// The indices into ``Mesh/triangles`` that belong to this set.
+        ///
+        /// Written as ranges where the indices are contiguous, so a set covering a whole region stays compact.
         public var triangleIndices: IndexSet
     }
 }

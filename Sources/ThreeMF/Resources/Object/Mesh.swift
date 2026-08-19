@@ -1,11 +1,25 @@
 import Foundation
 import Nodal
 
+/// Triangle geometry: a list of vertices, and triangles indexing into it.
+///
+/// For a mesh to describe a solid volume it has to be manifold and orientable: every edge shared
+/// by exactly two triangles, all wound consistently so their normals point outward.
 public struct Mesh: Sendable, XMLElementCodable {
+    /// The vertex positions, in the model's ``Model/unit``. Triangles refer to these by index.
     public var vertices: [Vertex]
+
+    /// The triangles, each indexing three of ``vertices``.
     public var triangles: [Triangle]
+
+    /// Named subsets of ``triangles``, from the triangle sets extension.
     public var triangleSets: [TriangleSet]
 
+    /// Creates a mesh.
+    /// - Parameters:
+    ///   - vertices: The vertex positions.
+    ///   - triangles: The triangles, indexing into `vertices`.
+    ///   - triangleSets: Named subsets of the triangles.
     public init(vertices: [Vertex], triangles: [Triangle], triangleSets: [TriangleSet] = []) {
         self.vertices = vertices
         self.triangles = triangles

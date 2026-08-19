@@ -19,8 +19,8 @@ struct MeshTests {
         #expect(decoded.triangleSets.map(\.triangleIndices) == [IndexSet([0])])
     }
 
-    // Distinguishes "container element omitted" from "container element present but empty" —
-    // a round trip alone can't tell these apart, since decoding an absent <vertices> and decoding
+    // Distinguishes "container element omitted" from "container element present but empty".
+    // A round trip alone can't tell these apart, since decoding an absent <vertices> and decoding
     // an empty one both yield an empty array.
     @Test func `empty vertices and triangles produce no container elements`() {
         let mesh = Mesh(vertices: [], triangles: [])

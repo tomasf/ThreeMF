@@ -22,11 +22,13 @@ struct PackageWriterReaderTests {
     // namespaces and an item's custom attributes.
     private func multiModelPackage() throws -> Data {
         var rootModel = Model(build: Build(items: []))
+
         // Two extensions each, to exercise the ordering of the prefix lists they're written as. Not
         // the production extension, though: that mints a fresh UUID per serialization by design, so
         // a model using it can't serialize identically twice in the first place.
         rootModel.requiredExtensions = [.materials, .boolean, .slice]
         rootModel.recommendedExtensions = [.mirroring, .triangleSets]
+
         // Four of each, rather than the two it takes to show the bug: an unordered collection has to
         // come out in exactly the sorted order to slip past, and four names make that unlikely enough
         // that a regression doesn't need several runs to show up.
@@ -197,8 +199,8 @@ struct PackageWriterReaderTests {
     }
 
     @Test func `content type part names are absolute whichever way the part was named`() throws {
-        // OPC part names have to start with a slash, so what the caller passed — or what the
-        // automatic numbering produced — can't be written through verbatim.
+        // OPC part names have to start with a slash, so neither what the caller passed nor what the
+        // automatic numbering produced can be written through verbatim.
         let writer = PackageWriter<Data>()
         writer.model = Model(build: Build(items: []))
 
@@ -464,7 +466,7 @@ struct PackageWriterReaderTests {
 
     // -- URL-based writer/reader: minimal coverage, since PackageWriter<URL>/PackageReader<URL>
     // share all their logic with the Data variants above via the generic PackageWriter<Target>/
-    // PackageReader<Target> — only init/finalize/invalidate differ per Target. --
+    // PackageReader<Target>; only init/finalize/invalidate differ per Target. --
 
     @Test func `file-based writer and reader round trip through a real file on disk`() throws {
         let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".3mf")

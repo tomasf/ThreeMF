@@ -60,8 +60,8 @@ internal extension URL {
     /// the form the ZIP archive keys its entries by.
     ///
     /// `/3D/3dmodel.model` and `3D/3dmodel.model` name the same part, so anything that decides
-    /// whether two URLs refer to the same file — staged files, content types, relationships — has
-    /// to compare this rather than the URLs themselves.
+    /// whether two URLs refer to the same file (staged files, content types, relationships) has to
+    /// compare this rather than the URLs themselves.
     var packagePartPath: String {
         var path = relativePath
         if path.hasPrefix("/") {

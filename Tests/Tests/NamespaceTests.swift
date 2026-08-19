@@ -12,8 +12,9 @@ struct NamespaceTests {
         var model = Model()
         model.requiredExtensions = [.production]
         model.recommendedExtensions = [.materials]
+
         // A materials-namespaced resource and a production UUID are what actually cause their
-        // namespaces to be requested/declared by the writer — merely listing an extension in
+        // namespaces to be requested/declared by the writer. Merely listing an extension in
         // requiredExtensions/recommendedExtensions doesn't by itself use its namespace anywhere.
         model.resources.resources = [ColorGroup(id: 1, colors: [.white])]
         model.build.uuid = UUID()
@@ -26,6 +27,7 @@ struct NamespaceTests {
         let readModel = try reader.model()
         #expect(readModel.requiredExtensions == [.production])
         #expect(readModel.recommendedExtensions == [.materials])
+
         // Known (built-in) namespaces like these shouldn't show up as "custom" ones.
         #expect(readModel.customNamespaces.isEmpty)
     }
@@ -57,6 +59,7 @@ struct NamespaceTests {
             let customAttribute = ExpandedName(namespaceName: "http://example.com/x", localName: "flag")
             var model = Model(build: Build(items: []))
             model.customAttributes = [customAttribute: "yes"]
+
             // Only building the document, not serializing it: writing it out fails on the
             // unresolvable prefix either way, so that wouldn't tell the trap apart from an error.
             _ = model.xmlDocument()

@@ -27,7 +27,7 @@ struct MetadataTests {
 
     // Encoding always produces the fixed capitalized strings above; decoding compares with a
     // literal == against those exact strings, so a lowercase match (e.g. "title") doesn't hit any
-    // well-known case and comes back as .custom instead — an easy-to-miss encode/decode asymmetry.
+    // well-known case and comes back as .custom instead, an easy-to-miss encode/decode asymmetry.
     @Test func `lowercase well-known name decodes as custom, not the matching case`() throws {
         #expect(try decodeAttribute(Metadata.Name.self, from: "title") == .custom("title"))
     }

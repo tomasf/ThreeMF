@@ -2,9 +2,9 @@ import Foundation
 import Zip
 import Nodal
 
-/// Reads 3MF packages from either a file URL or in‑memory data and provides access to parsed models and file contents.
+/// Reads 3MF packages from either a file URL or in-memory data and provides access to parsed models and file contents.
 ///
-/// PackageReader abstracts the underlying ZIP archive and exposes high‑level methods to:
+/// PackageReader abstracts the underlying ZIP archive and exposes high-level methods to:
 /// - Load the root model or a model at a specific path inside the package
 /// - Read raw file data from a given URL within the package
 ///
@@ -21,6 +21,7 @@ public struct PackageReader<Target> {
     }
 }
 
+/// Reading a package from a file on disk.
 public extension PackageReader<URL> {
     /// Creates a reader that opens a 3MF package from a file URL.
     ///
@@ -38,8 +39,9 @@ public extension PackageReader<URL> {
     }
 }
 
+/// Reading a package held in memory.
 public extension PackageReader<Data> {
-    /// Creates a reader that opens a 3MF package from in‑memory data.
+    /// Creates a reader that opens a 3MF package from in-memory data.
     ///
     /// - Parameter data: The 3MF package data.
     /// - Throws: An error if the archive cannot be opened.
@@ -87,6 +89,7 @@ internal extension PackageReader {
     }
 }
 
+/// Reading a package's contents, however it was opened.
 public extension PackageReader {
     /// Loads and parses a 3MF model from the package.
     ///

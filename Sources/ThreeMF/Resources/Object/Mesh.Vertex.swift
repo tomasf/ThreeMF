@@ -1,12 +1,24 @@
 import Foundation
 import Nodal
 
+/// A mesh's vertices.
 public extension Mesh {
+    /// One point in a mesh, in the model's ``Model/unit``.
     struct Vertex: Hashable, Sendable, XMLElementCodable {
+        /// The x coordinate.
         public let x: Double
+
+        /// The y coordinate.
         public let y: Double
+
+        /// The z coordinate.
         public let z: Double
 
+        /// Creates a vertex at the given coordinates.
+        /// - Parameters:
+        ///   - x: The x coordinate.
+        ///   - y: The y coordinate.
+        ///   - z: The z coordinate.
         public init(x: Double, y: Double, z: Double) {
             self.x = x
             self.y = y
@@ -27,6 +39,7 @@ public extension Mesh {
     }
 }
 
+/// How a vertex is written.
 public extension Mesh.Vertex {
     var elementName: ExpandedName { Core.vertex }
 }

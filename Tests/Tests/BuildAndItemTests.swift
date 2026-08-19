@@ -34,7 +34,7 @@ struct BuildAndItemTests {
     }
 
     // The "known attributes" exclusion set in Item.init(from:) only excludes the exact expanded
-    // names it knows about — a same-named attribute in a different (foreign) namespace shouldn't
+    // names it knows about. A same-named attribute in a different (foreign) namespace shouldn't
     // get swallowed by that exclusion.
     @Test func `custom attributes are not swallowed by a same-named known attribute`() throws {
         let foreignObjectID = ExpandedName(namespaceName: "http://example.com/x", localName: "objectid")

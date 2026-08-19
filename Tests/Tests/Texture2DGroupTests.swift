@@ -3,7 +3,7 @@ import Testing
 
 // Note: Materials.tex2Coord is spelled "text2coord" (extra "t") in Namespaces/Materials.swift,
 // which looks like a typo relative to the 3MF spec's <m:tex2coord>. A round trip can't catch this
-// since encode/decode both use the same (mis)spelled name symmetrically — flagging it here as a
+// since encode/decode both use the same (mis)spelled name symmetrically. Flagging it here as a
 // real-world-interop concern outside what a unit test can surface, not something fixed by this suite.
 struct Texture2DGroupTests {
     @Test func `texture group round trips with distinct ordered coordinates`() throws {

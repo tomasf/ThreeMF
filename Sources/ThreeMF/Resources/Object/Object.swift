@@ -2,25 +2,72 @@ import Foundation
 import Nodal
 
 // object
+/// A shape the model defines, either as a mesh or as an assembly of other objects.
+///
+/// An object is only output if a build item places it, directly or through another object's
+/// components. Its ``content`` holds the geometry; the property attributes say what it's made of.
 public struct Object: Resource {
     static public let elementName: ExpandedName = Core.object
 
     public var id: ResourceID
+
+    /// What the object is for: part of the output, support, or something else.
+    ///
+    /// `nil` means the file doesn't say, which per the spec means ``ObjectType/model``.
     public var type: ObjectType?
+
+    /// A part inside the package holding a thumbnail image of this object.
     public var thumbnail: URL?
+
+    /// An identifier for the part this object represents, for consumers that track parts.
     public var partNumber: String?
+
+    /// A human-readable name for the object.
     public var name: String?
+
+    /// A stable identifier for this object, from the production extension.
+    ///
+    /// When the model requires that extension, the writer assigns one if you don't.
     public var uuid: UUID?
 
+    /// How exact this object's geometry is, from the alternatives extension.
+    ///
+    /// Lets a file offer a low-resolution or obfuscated stand-in alongside the real geometry.
     public var modelResolution: ModelResolution?
+
+    /// Other representations of this same object, from the alternatives extension.
     public var alternatives: [Alternative]
 
+    /// The property group this object's material comes from, such as a ``ColorGroup`` or
+    /// ``BaseMaterialGroup``.
+    ///
+    /// Applies to the whole object, and is what triangles fall back on when they don't name properties
+    /// of their own.
     public var propertyGroupID: ResourceID?
+
+    /// Which entry of ``propertyGroupID`` to use.
     public var propertyIndex: ResourceIndex?
 
+    /// Metadata about this object.
     public var metadata: [Metadata]
+
+    /// The object's geometry: either a mesh or a set of components.
     public var content: Content
 
+    /// Creates an object.
+    /// - Parameters:
+    ///   - id: The object's id, unique within its model file.
+    ///   - type: What the object is for. `nil` means part of the output.
+    ///   - thumbnail: A package part holding a thumbnail image.
+    ///   - partNumber: An identifier for the part this represents.
+    ///   - name: A human-readable name.
+    ///   - uuid: A stable identifier, for the production extension.
+    ///   - modelResolution: How exact the geometry is, for the alternatives extension.
+    ///   - alternatives: Other representations of this object.
+    ///   - propertyGroupID: The property group the object's material comes from.
+    ///   - propertyIndex: Which entry of that group to use.
+    ///   - metadata: Metadata about the object.
+    ///   - content: The object's geometry.
     public init(
         id: ResourceID,
         type: ObjectType? = nil,
@@ -95,19 +142,35 @@ extension Object: XMLElementCodable {
     }
 }
 
+/// An object's geometry and kind.
 public extension Object {
+    /// What an object is made of: geometry of its own, or other objects arranged together.
     enum Content: Sendable {
+        /// Triangle geometry.
         case mesh (Mesh)
+
+        /// Other objects, each placed by its own transform.
         case components ([Component])
     }
 
+    /// What an object is for.
     enum ObjectType: String, Sendable, XMLValueCodable {
+        /// Part of the model's output. The default when a file doesn't say.
         case model
+
+        /// Support material, given as solid geometry.
         case solidSupport = "solidsupport"
+
+        /// Support that isn't described as solid geometry.
         case support
+
+        /// A surface rather than a solid volume.
         case surface
+
+        /// Something else; a consumer shouldn't treat it as part of the output.
         case other
 
+        /// The type an object has when the file doesn't say: ``ObjectType/model``.
         static let `default` = Self.model
     }
 }

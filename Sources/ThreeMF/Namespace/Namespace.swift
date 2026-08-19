@@ -1,7 +1,12 @@
 import Foundation
 import Nodal
 
+/// An XML namespace, identifying the core spec or one of its extensions.
+///
+/// Used by ``Model/requiredExtensions`` and ``Model/recommendedExtensions`` to say which extensions a
+/// model depends on. The built-in ones are available as static properties.
 public struct Namespace: Hashable, Sendable {
+    /// The namespace's URI, as it appears in the file.
     public let uri: String
     internal let outputPrefix: String?
 
@@ -39,6 +44,7 @@ internal extension Namespace {
     }
 }
 
+/// The namespaces of the core spec and its extensions.
 public extension Namespace {
     static let xml = Self(
         uri: "http://www.w3.org/XML/1998/namespace",

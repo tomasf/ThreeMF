@@ -2,14 +2,34 @@ import Foundation
 import Nodal
 
 // m:multiproperties
+/// Several property groups applied at once, blended together.
+///
+/// From the materials extension. It lets one index select, say, both a base material and a color, and
+/// says how to combine them, giving a color layered over a material rather than either alone.
 public struct Multiproperties: Resource, XMLElementCodable {
     static public let elementName: ExpandedName = Materials.multiproperties
 
     public var id: ResourceID
+
+    /// The property groups being combined, in layering order: the first is the base, later ones blend
+    /// over it.
     public var propertyGroupIDs: ResourceIndices // pids
+
+    /// How each layer after the first blends onto the ones below it.
+    ///
+    /// One fewer than ``propertyGroupIDs``, since the base layer isn't blended onto anything. `nil`
+    /// blends everything with ``BlendMethod/mix``.
     public var blendMethods: [BlendMethod]?
+
+    /// The combinations, each holding one index per entry of ``propertyGroupIDs``.
     public var multis: [ResourceIndices]
 
+    /// Creates a multiproperties resource.
+    /// - Parameters:
+    ///   - id: The resource's id, unique within its model file.
+    ///   - propertyGroupIDs: The property groups to combine, in layering order.
+    ///   - blendMethods: How each layer blends onto the ones below.
+    ///   - multis: The combinations, each an index per group.
     public init(id: ResourceID, propertyGroupIDs: ResourceIndices, blendMethods: [BlendMethod]? = nil, multis: [ResourceIndices]) {
         self.id = id
         self.propertyGroupIDs = propertyGroupIDs
@@ -37,14 +57,21 @@ public struct Multiproperties: Resource, XMLElementCodable {
     }
 }
 
+/// Reading a multiproperties resource as resolved layers.
 public extension Multiproperties {
+    /// One layer of a combination: which property it takes, and how it blends onto what's beneath.
     struct Layer: Sendable {
         let property: PropertyReference
         let blendMethod: BlendMethod
     }
 
+    /// One combination, as layers from the base upward.
     typealias LayerSequence = [Layer]
 
+    /// ``multis`` resolved into layers, pairing each index with its group and blend method.
+    ///
+    /// Indices missing from a combination resolve to 0, and layers with no blend method given use
+    /// ``BlendMethod/mix``, so every sequence has one layer per property group.
     var layerSequences: [LayerSequence] {
         multis.map { indices in
             propertyGroupIDs.enumerated().map { i, propertyGroupID in
@@ -56,8 +83,12 @@ public extension Multiproperties {
         }
     }
 
+    /// How one property layer combines with the ones below it.
     enum BlendMethod: String, Hashable, Sendable, XMLValueCodable {
+        /// Interpolate between the layers.
         case mix
+
+        /// Multiply the layers together, darkening where they overlap.
         case multiply
     }
 }
