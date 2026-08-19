@@ -30,6 +30,39 @@ struct NamespaceTests {
         #expect(readModel.customNamespaces.isEmpty)
     }
 
+    // The written <model> root carries every namespace declaration the package uses (the default
+    // core one, the custom prefix, and "m" for the color group), so this is where a declaration
+    // being mistaken for a custom attribute would show up.
+    @Test func `custom attributes in a custom namespace round trip through a full package`() throws {
+        let customAttribute = ExpandedName(namespaceName: "http://example.com/custom", localName: "flag")
+        var model = Model(build: Build(items: []))
+        model.customNamespaces = ["ext": "http://example.com/custom"]
+        model.customAttributes = [customAttribute: "yes"]
+        model.resources.resources = [ColorGroup(id: 1, colors: [.white])]
+
+        let writer = PackageWriter<Data>()
+        writer.model = model
+        let data = try writer.finalize()
+
+        let readModel = try PackageReader<Data>(data: data).model()
+        #expect(readModel.customAttributes == [customAttribute: "yes"])
+        #expect(readModel.customNamespaces == ["ext": "http://example.com/custom"])
+    }
+
+    // Writing an attribute in a namespace the model never declared a prefix for is a programmer
+    // error, not something to paper over with an invented prefix: the resulting XML couldn't
+    // resolve it.
+    @Test func `a custom attribute in an undeclared namespace traps`() async {
+        await #expect(processExitsWith: .failure) {
+            let customAttribute = ExpandedName(namespaceName: "http://example.com/x", localName: "flag")
+            var model = Model(build: Build(items: []))
+            model.customAttributes = [customAttribute: "yes"]
+            // Only building the document, not serializing it: writing it out fails on the
+            // unresolvable prefix either way, so that wouldn't tell the trap apart from an error.
+            _ = model.xmlDocument()
+        }
+    }
+
     @Test(arguments: [
         (ModelResolution.full, "fullres"),
         (.low, "lowres"),

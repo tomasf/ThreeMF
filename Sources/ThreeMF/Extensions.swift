@@ -28,6 +28,33 @@ internal extension Double {
     }
 }
 
+internal extension Dictionary where Key == ExpandedName, Value == String {
+    /// The entries in name order, so that attributes written from them don't come out in a
+    /// different order every run.
+    var sortedByName: [(key: ExpandedName, value: String)] {
+        sorted { ($0.key.namespaceName ?? "", $0.key.localName) < ($1.key.namespaceName ?? "", $1.key.localName) }
+    }
+}
+
+internal extension ExpandedName {
+    /// Whether this names a namespace declaration (`xmlns` or `xmlns:prefix`) rather than an attribute.
+    ///
+    /// Declarations are stored among an element's attributes, but they're namespace bookkeeping, not
+    /// content, so anything collecting an element's unrecognized attributes has to skip them.
+    var isNamespaceDeclaration: Bool {
+        // Fixed by the XML namespaces spec: xmlns:prefix declarations land in this namespace, and a
+        // default xmlns declaration is an unnamespaced attribute called "xmlns".
+        namespaceName == "http://www.w3.org/2000/xmlns/" || (namespaceName == nil && localName == "xmlns")
+    }
+}
+
+internal extension Node {
+    /// The element's attributes apart from the given known ones, and apart from namespace declarations.
+    func customAttributes(besides knownAttributes: Set<ExpandedName>) -> [ExpandedName: String] {
+        namespacedAttributes.filter { !knownAttributes.contains($0.key) && !$0.key.isNamespaceDeclaration }
+    }
+}
+
 internal extension URL {
     /// Identifies a part within a package: the path with any leading slash removed, which is also
     /// the form the ZIP archive keys its entries by.

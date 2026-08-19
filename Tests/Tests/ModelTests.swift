@@ -1,4 +1,5 @@
 import Testing
+import Nodal
 @testable import ThreeMF
 
 struct ModelTests {
@@ -36,5 +37,35 @@ struct ModelTests {
         let decoded = try roundTrip(model)
         #expect(decoded.xmlLanguageCode == "en-US")
         #expect(decoded.languageCode == "sv")
+    }
+
+    @Test func `custom attributes on the model round trip`() throws {
+        let plainAttribute = ExpandedName(namespaceName: nil, localName: "vendorflag")
+        let namespacedAttribute = ExpandedName(namespaceName: "http://example.com/x", localName: "custom")
+        let model = Model(
+            customAttributes: [plainAttribute: "on", namespacedAttribute: "value"],
+            build: Build(items: [])
+        )
+        let decoded = try roundTrip(model)
+        #expect(decoded.customAttributes == [plainAttribute: "on", namespacedAttribute: "value"])
+    }
+
+    // Namespace declarations sit among an element's attributes, and <model> is the element that
+    // carries them all, so collecting unrecognized attributes has to leave them alone.
+    @Test func `namespace declarations are not collected as custom attributes`() throws {
+        var model = Model(build: Build(items: []))
+        model.customNamespaces = ["ext": "http://example.com/custom"]
+        let decoded = try roundTrip(model)
+        #expect(decoded.customAttributes.isEmpty)
+    }
+
+    // The known-attribute exclusion matches whole expanded names, so an attribute that shares a
+    // known local name but sits in a foreign namespace is a custom attribute, not the known one.
+    @Test func `a custom attribute sharing a known local name is kept separate`() throws {
+        let foreignUnit = ExpandedName(namespaceName: "http://example.com/x", localName: "unit")
+        let model = Model(unit: .meter, customAttributes: [foreignUnit: "furlong"], build: Build(items: []))
+        let decoded = try roundTrip(model)
+        #expect(decoded.unit == .meter)
+        #expect(decoded.customAttributes == [foreignUnit: "furlong"])
     }
 }

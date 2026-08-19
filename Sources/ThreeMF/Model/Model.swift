@@ -18,6 +18,12 @@ public struct Model: Sendable, XMLElementCodable {
     public var recommendedExtensions: Set<Namespace>
     public var customNamespaces: [String: String]
 
+    /// Attributes on the `<model>` element that aren't part of 3MF itself, preserved as they are.
+    ///
+    /// An attribute in a namespace needs a prefix for that namespace in ``customNamespaces``;
+    /// writing a model that uses an undeclared namespace is a programmer error and traps.
+    public var customAttributes: [ExpandedName: String]
+
     public var metadata: [Metadata]
     public var resources: ResourceContainer
     public var build: Build
@@ -29,6 +35,7 @@ public struct Model: Sendable, XMLElementCodable {
         requiredExtensions: Set<Namespace> = [],
         recommendedExtensions: Set<Namespace> = [],
         customNamespaces: [String: String] = [:], // Prefix: URI
+        customAttributes: [ExpandedName: String] = [:],
         metadata: [Metadata] = [],
         resources: [any Resource] = [],
         build: Build
@@ -39,6 +46,7 @@ public struct Model: Sendable, XMLElementCodable {
         self.requiredExtensions = requiredExtensions
         self.recommendedExtensions = recommendedExtensions
         self.customNamespaces = customNamespaces
+        self.customAttributes = customAttributes
 
         self.metadata = metadata
         self.resources = ResourceContainer(resources: resources)
@@ -52,12 +60,13 @@ public struct Model: Sendable, XMLElementCodable {
         requiredExtensions: Set<Namespace> = [],
         recommendedExtensions: Set<Namespace> = [],
         customNamespaces: [String: String] = [:], // Prefix: URI
+        customAttributes: [ExpandedName: String] = [:],
         metadata: [Metadata] = [],
         resources: [any Resource] = [],
         buildItems: [Item] = []
     ) {
         let build = Build(items: buildItems)
-        self.init(unit: unit, xmlLanguageCode: xmlLanguageCode, languageCode: languageCode, requiredExtensions: requiredExtensions, recommendedExtensions: recommendedExtensions, customNamespaces: customNamespaces, metadata: metadata, resources: resources, build: build)
+        self.init(unit: unit, xmlLanguageCode: xmlLanguageCode, languageCode: languageCode, requiredExtensions: requiredExtensions, recommendedExtensions: recommendedExtensions, customNamespaces: customNamespaces, customAttributes: customAttributes, metadata: metadata, resources: resources, build: build)
     }
 
     public func encode(to element: Node) {
@@ -69,6 +78,10 @@ public struct Model: Sendable, XMLElementCodable {
             // written into is a list, and it shouldn't come out differently on every run.
             element.setValue(requiredExtensions.compactMap(\.outputPrefix).sorted().nonEmpty, forAttribute: .requiredExtensions)
             element.setValue(recommendedExtensions.compactMap(\.outputPrefix).sorted().nonEmpty, forAttribute: .recommendedExtensions)
+            for (name, value) in customAttributes.sortedByName {
+                element.setValue(value, forAttribute: name)
+            }
+
             element.encode(metadata, elementName: Core.metadata)
             element.encode(resources, elementName: Core.resources)
             element.encode(build, elementName: Core.build)
@@ -95,6 +108,9 @@ public struct Model: Sendable, XMLElementCodable {
         let knownNamespaces = Set(Namespace.known.map(\.uri))
         customNamespaces = element.declaredNamespaces.filter { $0 != nil && !knownNamespaces.contains($1) } as! [String: String]
 
+        let knownAttributes: Set<ExpandedName> = [.unit, XML.lang, .language, .requiredExtensions, .recommendedExtensions]
+        customAttributes = element.customAttributes(besides: knownAttributes)
+
         metadata = try element.decode(elementName: Core.metadata)
         resources = try element.decode(elementName: Core.resources)
         build = try element.decode(elementName: Core.build)
@@ -119,7 +135,9 @@ public extension Model {
 
         for namespaceName in modelDocument.undeclaredNamespaceNames.sorted() {
             guard let namespace = Namespace.knownNamespace(for: namespaceName) else {
-                assertionFailure("Unknown namespace \(namespaceName)")
+                // Either a built-in namespace is missing from Namespace.known, or a custom attribute
+                // uses a namespace the model never declared a prefix for — see Model.customAttributes.
+                assertionFailure("Undeclared namespace \(namespaceName)")
                 continue
             }
             modelDocument.documentElement?.declareNamespace(namespaceName, forPrefix: namespace.outputPrefix)

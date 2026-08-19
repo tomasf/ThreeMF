@@ -36,8 +36,7 @@ public struct Item: Sendable, XMLElementCodable {
         element.setValue(path, forAttribute: Production.path)
 
         element.encode(metadata, elementName: Core.metadata, containedIn: Core.metadataGroup)
-        // In name order, so that an item's attributes don't come out in a different order every run
-        for (name, value) in customAttributes.sorted(by: { ($0.key.namespaceName ?? "", $0.key.localName) < ($1.key.namespaceName ?? "", $1.key.localName) }) {
+        for (name, value) in customAttributes.sortedByName {
             element.setValue(value, forAttribute: name)
         }
     }
@@ -51,6 +50,6 @@ public struct Item: Sendable, XMLElementCodable {
         metadata = try element.decode(elementName: Core.metadata, containedIn: Core.metadataGroup)
 
         let knownAttributes: Set<ExpandedName> = [.objectID, .transform, .partNumber, Core.metadataGroup, Production.UUID, Production.path]
-        customAttributes = element.namespacedAttributes.filter { !knownAttributes.contains($0.key) }
+        customAttributes = element.customAttributes(besides: knownAttributes)
     }
 }
