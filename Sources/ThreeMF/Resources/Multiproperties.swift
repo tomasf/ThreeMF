@@ -61,8 +61,11 @@ public struct Multiproperties: Resource, XMLElementCodable {
 public extension Multiproperties {
     /// One layer of a combination: which property it takes, and how it blends onto what's beneath.
     struct Layer: Sendable {
-        let property: PropertyReference
-        let blendMethod: BlendMethod
+        /// Which entry of which property group this layer takes.
+        public let property: PropertyReference
+
+        /// How this layer combines with the ones below it.
+        public let blendMethod: BlendMethod
     }
 
     /// One combination, as layers from the base upward.

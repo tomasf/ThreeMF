@@ -171,7 +171,7 @@ public extension Object {
         case other
 
         /// The type an object has when the file doesn't say: ``ObjectType/model``.
-        static let `default` = Self.model
+        public static let `default` = Self.model
     }
 }
 

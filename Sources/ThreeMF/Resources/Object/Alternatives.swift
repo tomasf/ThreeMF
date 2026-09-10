@@ -19,7 +19,14 @@ public struct Alternative: XMLElementCodable, Sendable {
     /// How exact this alternative is, so a consumer can tell it apart from the others.
     public var modelResolution: ModelResolution?
 
-    init(objectID: ResourceID, uuid: UUID? = nil, path: URL? = nil, modelResolution: ModelResolution? = nil) {
+    /// Creates an alternative representation of an object.
+    /// - Parameters:
+    ///   - objectID: The id of the object holding this representation.
+    ///   - uuid: The identifier this alternative shares with the object it stands in for. A fresh
+    ///     one is generated when you don't give one.
+    ///   - path: The model part the alternative's object lives in, when it isn't this one.
+    ///   - modelResolution: How exact this alternative is.
+    public init(objectID: ResourceID, uuid: UUID? = nil, path: URL? = nil, modelResolution: ModelResolution? = nil) {
         self.objectID = objectID
         self.uuid = uuid ?? UUID()
         self.path = path
