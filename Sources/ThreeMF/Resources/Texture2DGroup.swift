@@ -62,7 +62,11 @@ public extension Texture2DGroup {
         /// The vertical position across the image, from 0 to 1.
         public let v: Double
 
-        init(u: Double, v: Double) {
+        /// Creates a texture coordinate.
+        /// - Parameters:
+        ///   - u: The horizontal position across the image, from 0 to 1.
+        ///   - v: The vertical position across the image, from 0 to 1.
+        public init(u: Double, v: Double) {
             self.u = u
             self.v = v
         }

@@ -21,6 +21,17 @@ public extension Mesh {
         ///
         /// Written as ranges where the indices are contiguous, so a set covering a whole region stays compact.
         public var triangleIndices: IndexSet
+
+        /// Creates a triangle set.
+        /// - Parameters:
+        ///   - name: A human-readable name for the set.
+        ///   - identifier: An identifier for the set, unique within its mesh.
+        ///   - triangleIndices: The indices into ``Mesh/triangles`` that belong to this set.
+        public init(name: String, identifier: String, triangleIndices: IndexSet) {
+            self.name = name
+            self.identifier = identifier
+            self.triangleIndices = triangleIndices
+        }
     }
 }
 
