@@ -160,12 +160,17 @@ public struct ModelLoader<Source: Sendable> {
 
         case .components (let components):
             try components.flatMap { component in
-                try meshObjectReferences(
+                // A component without a path refers to the file it's written in. One with a path
+                // crosses into another file, whose resources are numbered on their own, so the
+                // property ids resolved here name nothing there and stop at the boundary.
+                let componentModelPath = component.path ?? modelPath
+                let crossesFiles = componentModelPath != modelPath
+                return try meshObjectReferences(
                     for: component.objectID,
-                    in: component.path,
+                    in: componentModelPath,
                     with: models,
-                    propertyGroupID: resolvedPropertyGroupID,
-                    propertyIndex: resolvedPropertyIndex
+                    propertyGroupID: crossesFiles ? nil : resolvedPropertyGroupID,
+                    propertyIndex: crossesFiles ? nil : resolvedPropertyIndex
                 )
                 .map { $0.prepending(transform: component.transform, name: object.name, partNumber: object.partNumber) }
             }
@@ -247,6 +252,9 @@ public extension ModelLoader {
             public let transforms: [Matrix3D]
 
             /// The property group identifier, if any, associated with this component.
+            ///
+            /// This is the mesh object's own, or one inherited from a parent object in the same
+            /// model file. It names a resource of the model at `LoadedMesh.modelIndex`.
             public let propertyGroupID: ResourceID?
 
             /// The property index within the property group, if any.
