@@ -119,6 +119,49 @@ struct ModelLoaderTests {
         #expect(loaded.items.first?.rootObject.name == "External")
     }
 
+    @Test func `an inherited property doesn't follow a component into another model file`() async throws {
+        // A property group id names a resource of the file it's written in, so a parent's id means
+        // nothing in the file a component's path points to. The child there gets no property
+        // rather than whichever unrelated resource happens to share the id.
+        var additionalModel = Model()
+        additionalModel.resources.resources = [meshObject(id: 1)]
+
+        let writer = PackageWriter<Data>()
+        let additionalURL = try writer.addAdditionalModel(additionalModel, named: "extra")
+        var rootModel = Model()
+        rootModel.resources.resources = [
+            Object(id: 2, propertyGroupID: 100, propertyIndex: 5, content: .components([Component(objectID: 1, path: additionalURL)])),
+        ]
+        rootModel.build.items = [Item(objectID: 2)]
+        writer.model = rootModel
+        let data = try await writer.finalize()
+
+        let loaded = try await ModelLoader<Data>(data: data).load()
+        let component = loaded.items[0].components[0]
+        #expect(component.propertyGroupID == nil)
+        #expect(component.propertyIndex == nil)
+    }
+
+    @Test func `a component without a path refers to its own model file, not the root`() async throws {
+        // The production extension lets only the root file's components name a path; the rest
+        // reference objects in the file they're written in.
+        var additionalModel = Model()
+        additionalModel.resources.resources = [
+            meshObject(id: 1, name: "External leaf"),
+            componentsObject(id: 2, name: "External container", [Component(objectID: 1)]),
+        ]
+
+        let writer = PackageWriter<Data>()
+        let additionalURL = try writer.addAdditionalModel(additionalModel, named: "extra")
+        writer.model = Model(build: Build(items: [Item(objectID: 2, path: additionalURL)]))
+        let data = try await writer.finalize()
+
+        let loaded = try await ModelLoader<Data>(data: data).load()
+        let component = loaded.items[0].components[0]
+        #expect(component.names == ["External container", "External leaf"])
+        #expect(loaded.meshes[component.meshIndex].mesh.vertices.count == 3)
+    }
+
     @Test func `components with mixed mesh and nested-components siblings both resolve`() async throws {
         var model = Model()
         model.resources.resources = [
